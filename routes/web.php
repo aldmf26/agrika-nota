@@ -12,6 +12,12 @@ Route::get('/', function () {
 });
 
 /**
+ * PUBLIC NOTA VIEW - View nota detail without login
+ */
+Route::get('/v/{nomor_nota}', [\App\Http\Controllers\PublicNotaController::class, 'show'])
+    ->name('nota.public_view');
+
+/**
  * DOCUMENTATION ROUTES - Public routes for documentation
  */
 Route::get('/docs', function () {

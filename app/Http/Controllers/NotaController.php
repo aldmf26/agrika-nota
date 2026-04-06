@@ -107,10 +107,10 @@ class NotaController extends Controller
         $divisis = Divisi::aktif()->get(['id', 'nama', 'kode']);
 
         // Generate auto nomor nota (hanya hitung yang tidak terhapus agar bisa reuse jika yang terakhir dihapus)
-        // Format default: [KODE]-YYYYMMDD-XXXX
+        // Format default: XXXX (akan ditambah kode divisi di JS)
         $latestId = Nota::max('id') ?? 0;
         $nextNumber = str_pad($latestId + 1, 4, '0', STR_PAD_LEFT);
-        $nomorNota = date('Ymd') . '-' . $nextNumber;
+        $nomorNota = $nextNumber;
 
         return view('nota.create', compact('divisis', 'nomorNota'));
     }

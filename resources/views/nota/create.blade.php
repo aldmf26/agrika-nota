@@ -287,7 +287,7 @@
             if (divisiId) {
                 const divisi = divisiData.find(d => d.id == divisiId);
                 if (divisi && divisi.kode) {
-                    nomorNotaInput.value = divisi.kode.toUpperCase() + '-' + originalNomorNota;
+                    nomorNotaInput.value = divisi.kode.toUpperCase() + originalNomorNota;
                     return;
                 }
             }

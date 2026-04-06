@@ -5,220 +5,84 @@
 @section('content')
     <div class="max-w-4xl mx-auto">
         <!-- Header -->
-        <div class="flex justify-between items-start mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">📝 Detail Nota</h1>
                 <p class="text-gray-600 mt-1">{{ $nota->tanggal_nota->format('d F Y') }}</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <x-status-badge :status="$nota->status" />
                 @if($nota->is_printed)
-                    <span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-amber-100 flex items-center gap-1" title="Dicetak oleh {{ $nota->printer->name ?? 'System' }} pada {{ $nota->printed_at->format('d/m/Y H:i') }}">
+                    <span
+                        class="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-amber-100 flex items-center gap-1">
                         <span class="animate-pulse">●</span> TERDAFTAR CETAK
                     </span>
                 @endif
-                <a href="{{ route('nota.print', $nota) }}" target="_blank"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center gap-2">
-                    🖨️ CETAK NOTA
-                </a>
+
+                <div class="flex gap-2">
+                    @php
+                        $waMessage = "Nota: " . ($nota->nomor_nota ?? '(Digital)') . "\n" .
+                            "Lokasi: " . ($nota->divisi->nama ?? '-') . "\n" .
+                            "Keterangan: " . $nota->keterangan . "\n" .
+                            "Lihat Detail: " . route('nota.public_view', ['nomor_nota' => $nota->nomor_nota]);
+                    @endphp
+
+                    <button type="button" onclick="copyPublicLink()"
+                        class="bg-green-600 border border-green-700 text-white hover:bg-green-700 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                        📋 Salin Pesan WA
+                    </button>
+
+                    <a href="{{ route('nota.print', $nota) }}" target="_blank"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-1">
+                        🖨️ CETAK
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- Info Grid -->
-        <div class="grid grid-cols-3 gap-4 mb-6">
-            <x-info-card label="Nominal" :value="$nota->nominal_formatted" icon="💰" />
-            <x-info-card label="Tipe Nota" :value="ucfirst(str_replace('_', ' ', $nota->tipe))" icon="📌" />
-            <x-info-card label="Dari Admin" :value="$nota->user->name" icon="👤" />
-        </div>
-
-        <!-- Main Content -->
-        <div class="grid grid-cols-3 gap-6">
-            <!-- Left: Nota Details -->
-            <div class="col-span-2 space-y-4">
-                <!-- Basic Info -->
-                <x-card title="Informasi Umum">
-                    <dl class="space-y-3">
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Nomor Nota:</dt>
-                            <dd class="font-medium">{{ $nota->nomor_nota ?? '(Digital)' }}</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Tanggal:</dt>
-                            <dd class="font-medium">{{ $nota->tanggal_nota->format('d/m/Y') }}</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Divisi Utama:</dt>
-                            <dd class="font-medium">{{ $nota->divisi->nama ?? '-' }}</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Keterangan:</dt>
-                            <dd class="font-medium">{{ $nota->keterangan }}</dd>
-                        </div>
-                    </dl>
-                </x-card>
-
-                <!-- Tipe-Specific Details -->
-                @if ($nota->tipe === 'split')
-                    <x-card title="Split Tagihan">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50 border-b">
-                                <tr>
-                                    <th class="px-4 py-2 text-left">Divisi</th>
-                                    <th class="px-4 py-2 text-right">Nominal</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y">
-                                @foreach ($nota->items as $item)
-                                    <tr>
-                                        <td class="px-4 py-2">{{ $item->divisi->nama }}</td>
-                                        <td class="px-4 py-2 text-right font-semibold">{{ $item->nominalFormatted() }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </x-card>
-                @endif
-
-                @if ($nota->tipe === 'revenue_sharing')
-                    <x-card title="Revenue Sharing">
-                        <dl class="space-y-3">
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Base Amount:</dt>
-                                <dd class="font-medium">Rp {{ number_format($nota->base_amount, 0, ',', '.') }}</dd>
-                            </div>
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Persentase:</dt>
-                                <dd class="font-medium">{{ $nota->persentase }}%</dd>
-                            </div>
-                            <div class="border-t pt-3 flex justify-between bg-green-50 p-3 rounded">
-                                <dt class="text-gray-900 font-semibold">Total Nominal:</dt>
-                                <dd class="font-bold text-green-700">{{ $nota->nominal_formatted }}</dd>
-                            </div>
-                        </dl>
-                    </x-card>
-                @endif
-
-                @if ($nota->tipe === 'kelebihan_bayar')
-                    <x-card title="Kelebihan Bayar (Deposit)">
-                        <dl class="space-y-3">
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Nominal Seharusnya:</dt>
-                                <dd class="font-medium">Rp {{ number_format($nota->nominal_seharusnya, 0, ',', '.') }}</dd>
-                            </div>
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Nominal Dibayar:</dt>
-                                <dd class="font-medium">Rp {{ number_format($nota->nominal_dibayar, 0, ',', '.') }}</dd>
-                            </div>
-                            <div class="border-t pt-3 flex justify-between bg-yellow-50 p-3 rounded">
-                                <dt class="text-gray-900 font-semibold">Deposit:</dt>
-                                <dd class="font-bold text-yellow-700">+ Rp {{ number_format($nota->selisih, 0, ',', '.') }}
-                                </dd>
-                            </div>
-                        </dl>
-                    </x-card>
-                @endif
-
-                <!-- Attachments -->
-                @if ($nota->attachments->count() > 0)
-                    <x-card title="Lampiran Foto" :subtitle="$nota->attachments->count() . ' file'">
-                        <div class="grid grid-cols-2 gap-4">
-                            @foreach ($nota->attachments as $attachment)
-                                <div>
-                                    <img src="{{ Storage::disk('public')->url($attachment->file_path) }}" alt="Attachment"
-                                        class="w-full h-48 object-cover rounded-lg border border-gray-200 cursor-pointer hover:shadow-lg transition-shadow"
-                                        onclick="openImageModal(this.src, '{{ $attachment->file_name }}')">
-                                    <p class="text-xs text-gray-600 mt-1">{{ $attachment->file_name }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </x-card>
-                @endif
-
-                <!-- Approval Info -->
-                @if ($nota->status === 'approved')
-                    <x-card title="✓ Approved By" class="bg-green-50 border-green-200">
-                        <dl class="space-y-2">
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Approver:</dt>
-                                <dd class="font-medium">{{ $nota->approver->name }}</dd>
-                            </div>
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Tanggal:</dt>
-                                <dd class="font-medium">{{ $nota->approved_at->format('d/m/Y H:i') }}</dd>
-                            </div>
-                            @if ($nota->catatan_approver)
-                                <div class="flex justify-between">
-                                    <dt class="text-gray-600">Catatan:</dt>
-                                    <dd class="font-medium">{{ $nota->catatan_approver }}</dd>
-                                </div>
-                            @endif
-                        </dl>
-                    </x-card>
-                @endif
-
-                @if ($nota->status === 'rejected')
-                    <x-card title="✗ Rejected By" class="bg-red-50 border-red-200">
-                        <dl class="space-y-2">
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Approver:</dt>
-                                <dd class="font-medium">{{ $nota->approver->name }}</dd>
-                            </div>
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Alasan:</dt>
-                                <dd class="font-medium">{{ $nota->catatan_approver }}</dd>
-                            </div>
-                            <div class="flex justify-between">
-                                <dt class="text-gray-600">Tanggal:</dt>
-                                <dd class="font-medium">{{ $nota->rejected_at->format('d/m/Y H:i') }}</dd>
-                            </div>
-                        </dl>
-                    </x-card>
-                @endif
-            </div>
-
-            <!-- Right: Actions -->
-            <div>
-                <x-card title="Aksi">
+        @section('actions-sidebar')
+            <!-- Actions Sidebar -->
+            <div class="space-y-4">
+                <x-card title="Aksi" class="sticky top-24">
                     <div class="space-y-2">
                         @if ($nota->status === 'rejected' && auth()->user()->can('update', $nota))
-                            <!-- Admin dapat edit nota yang rejected (untuk revisi) -->
                             <a href="{{ route('nota.edit', $nota) }}"
-                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors block text-center">
+                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors block text-center shadow-sm">
                                 ✏️ Edit & Resubmit
                             </a>
                         @endif
 
                         @if ($nota->status === 'pending' && auth()->user()->can('approve', $nota))
-                            <!-- Approver dapat approve -->
                             <form action="{{ route('nota.approve', $nota) }}" method="POST" class="mb-2">
                                 @csrf
-                                <textarea name="catatan_approver" class="w-full text-xs p-2 border border-gray-300 rounded mb-2"
+                                <textarea name="catatan_approver"
+                                    class="w-full text-xs p-2 border border-gray-300 rounded-lg mb-2 focus:ring-green-400 focus:border-green-400"
                                     placeholder="Optional: catatan"></textarea>
                                 <button type="submit"
-                                    class="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                                    class="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-all shadow-sm">
                                     ✓ Approve
                                 </button>
                             </form>
 
-                            <!-- Approver dapat reject -->
                             <button
-                                class="w-full bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                                class="w-full bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
                                 onclick="toggleRejectForm()">
-                                ✗ Reject
+                                ✗ Reject (Tolak)
                             </button>
 
                             <form id="rejectForm" action="{{ route('nota.reject', $nota) }}" method="POST"
-                                class="hidden mt-2" onsubmit="return validateRejectMessage()">
+                                class="hidden mt-2 border-t pt-2" onsubmit="return validateRejectMessage()">
                                 @csrf
-                                <textarea name="catatan_approver" id="rejectMessage" class="w-full text-xs p-2 border border-red-300 rounded mb-2"
+                                <textarea name="catatan_approver" id="rejectMessage"
+                                    class="w-full text-xs p-2 border border-red-300 rounded mb-2"
                                     placeholder="Alasan penolakan (minimal 10 karakter)" required></textarea>
-                                <p id="charCount" class="text-xs text-gray-600 mb-2">0 karakter</p>
+                                <p id="charCount" class="text-[10px] text-gray-500 mb-2">0 karakter</p>
                                 <button type="submit"
-                                    class="w-full bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700">
-                                    Konfirm Reject
+                                    class="w-full bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-all">
+                                    Konfirmasi Tolak
                                 </button>
                                 <button type="button"
-                                    class="w-full mt-1 bg-gray-300 text-gray-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-400"
+                                    class="w-full mt-1 bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200"
                                     onclick="toggleRejectForm()">
                                     Batal
                                 </button>
@@ -226,35 +90,34 @@
                         @endif
 
                         @if (in_array($nota->status, ['approved', 'rejected']) && auth()->user()->can('void', $nota))
-                            <!-- Approver dapat void -->
                             <form action="{{ route('nota.void', $nota) }}" method="POST"
                                 onsubmit="return confirm('Yakin mau batalkan nota ini?')">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors">
+                                    class="w-full bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors shadow-sm">
                                     ⊘ Void (Batalkan)
                                 </button>
                             </form>
                         @endif
 
                         @if (in_array($nota->status, ['pending', 'rejected']) && auth()->user()->can('delete', $nota))
-                            <!-- Delete nota (force delete + archive) -->
                             <button type="button"
-                                class="w-full bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                                class="w-full bg-white text-red-600 border border-red-100 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
                                 onclick="openDeleteModal()">
                                 🗑️ Hapus Nota
                             </button>
                         @endif
 
-                        <!-- Back to list -->
                         <a href="{{ route('nota.index') }}"
-                            class="block w-full bg-gray-200 text-gray-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors text-center mt-4">
+                            class="block w-full bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors text-center mt-4 border border-gray-100">
                             ← Kembali
                         </a>
                     </div>
                 </x-card>
             </div>
-        </div>
+        @endsection
+
+        @include('nota.partials.detail-content')
     </div>
 
     <!-- Image Modal with Zoom -->
@@ -364,7 +227,7 @@
         }
 
         // Close modal dengan ESC key
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 const modal = document.getElementById('imageModal');
                 if (!modal.classList.contains('hidden')) {
@@ -374,7 +237,7 @@
         });
 
         // Scroll zoom dengan mouse wheel (optional)
-        document.addEventListener('wheel', function(e) {
+        document.addEventListener('wheel', function (e) {
             const modal = document.getElementById('imageModal');
             if (!modal.classList.contains('hidden') && e.target.id === 'modalImage') {
                 e.preventDefault();
@@ -405,12 +268,12 @@
         }
 
         // Update char counter
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const textarea = document.getElementById('rejectMessage');
             const charCount = document.getElementById('charCount');
 
             if (textarea) {
-                textarea.addEventListener('input', function() {
+                textarea.addEventListener('input', function () {
                     const count = this.value.length;
                     charCount.textContent = count + ' karakter' + (count < 10 ? ' (min 10)' : '');
                     charCount.className = count < 10 ? 'text-xs text-red-600 mb-2 font-medium' :
@@ -428,11 +291,11 @@
                 <span class="text-2xl">⚠️</span>
                 <h3 class="text-xl font-bold">Konfirmasi Penghapusan</h3>
             </div>
-            
+
             <!-- Body -->
             <div class="p-6">
                 <p class="text-gray-800 font-semibold mb-4">Anda yakin ingin menghapus nota ini secara permanen?</p>
-                
+
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
                     <div class="flex items-start gap-3">
                         <span class="text-blue-500 mt-0.5">ℹ️</span>
@@ -440,7 +303,8 @@
                             <p class="text-sm text-blue-800 font-bold mb-1">Informasi Penting:</p>
                             <ul class="text-xs text-blue-700 space-y-1 list-disc ml-4">
                                 <li>Data akan dipindahkan ke <strong>tabel arsip</strong></li>
-                                <li>Nomor urut nota ini akan <strong>tersedia kembali</strong> untuk input baru jika ini adalah nota terakhir</li>
+                                <li>Nomor urut nota ini akan <strong>tersedia kembali</strong> untuk input baru jika ini
+                                    adalah nota terakhir</li>
                                 <li>Data asli di tabel utama akan <strong>benar-benar dihapus</strong></li>
                             </ul>
                         </div>
@@ -489,8 +353,29 @@
         }
 
         // Close modal on click outside (optional)
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
+        document.getElementById('deleteModal').addEventListener('click', function (e) {
             if (e.target === this) closeDeleteModal();
         });
+
+        function copyPublicLink() {
+            const message = {!! json_encode($waMessage) !!};
+
+            // Create temporary textarea for multi-line copy
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = message;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+
+            // Show alert/feedback
+            const button = event.currentTarget;
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ Berhasil!';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        }
     </script>
 @endsection
