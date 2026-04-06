@@ -29,8 +29,7 @@
                             Sharing</option>
                         <option value="kelebihan_bayar" {{ old('tipe') === 'kelebihan_bayar' ? 'selected' : '' }}>Kelebihan
                             Bayar (Deposit)</option>
-                        <option value="digital" {{ old('tipe') === 'digital' ? 'selected' : '' }}>Digital / Screenshot
-                        </option>
+
                     </select>
                     @error('tipe')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -106,7 +105,8 @@
                     </label>
                     <textarea name="keterangan" rows="3"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Contoh: Upah harian driver, Biaya transportasi, dll" required>{{ old('keterangan') }}</textarea>
+                        placeholder="Contoh: Upah harian driver, Biaya transportasi, dll"
+                        required>{{ old('keterangan') }}</textarea>
                     @error('keterangan')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
@@ -178,8 +178,7 @@
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                                 value="{{ old('nominal_total') ? number_format(old('nominal_total'), 0, ',', '.') : '' }}"
                                 onkeyup="formatCurrency(this, 'nominal_total'); calculateSplitTotal()">
-                            <input type="hidden" name="nominal_total" id="nominal_total"
-                                value="{{ old('nominal_total') }}">
+                            <input type="hidden" name="nominal_total" id="nominal_total" value="{{ old('nominal_total') }}">
                             <p class="text-xs text-gray-500 mt-1">Akan terbagi ke divisi-divisi di bawah</p>
                             @error('nominal_total')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -284,7 +283,7 @@
         function updateNomorNota() {
             const divisiId = document.getElementById('divisi_id').value;
             const nomorNotaInput = document.getElementById('nomor_nota_input');
-            
+
             if (divisiId) {
                 const divisi = divisiData.find(d => d.id == divisiId);
                 if (divisi && divisi.kode) {
@@ -410,28 +409,28 @@
             splitItemsData.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="px-4 py-3">
-                        <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                            onchange="updateSplitItem(${item.id}, 'divisi_id', this.value)" required>
-                            <option value="">-- Pilih Divisi --</option>
-                            ${divisiData.map(d => `<option value="${d.id}" ${item.divisi_id == d.id ? 'selected' : ''}>${d.nama}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td class="px-4 py-3">
-                        <input type="text" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-green-500"
-                            value="${item.nominal ? new Intl.NumberFormat('id-ID').format(item.nominal) : ''}"
-                            onkeyup="const val = this.value.replace(/\\D/g, ''); updateSplitItemData(${item.id}, 'nominal', val); formatCurrencyEl(this);"
-                            placeholder="0"
-                            required>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <button type="button" onclick="removeSplitItem(${item.id})"
-                            class="text-red-500 hover:text-red-700 font-semibold text-lg">
-                            ✕
-                        </button>
-                    </td>
-                `;
+                            <td class="px-4 py-3">
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    onchange="updateSplitItem(${item.id}, 'divisi_id', this.value)" required>
+                                    <option value="">-- Pilih Divisi --</option>
+                                    ${divisiData.map(d => `<option value="${d.id}" ${item.divisi_id == d.id ? 'selected' : ''}>${d.nama}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="text" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    value="${item.nominal ? new Intl.NumberFormat('id-ID').format(item.nominal) : ''}"
+                                    onkeyup="const val = this.value.replace(/\\D/g, ''); updateSplitItemData(${item.id}, 'nominal', val); formatCurrencyEl(this);"
+                                    placeholder="0"
+                                    required>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button type="button" onclick="removeSplitItem(${item.id})"
+                                    class="text-red-500 hover:text-red-700 font-semibold text-lg">
+                                    ✕
+                                </button>
+                            </td>
+                        `;
                 tbody.appendChild(row);
             });
 
@@ -499,7 +498,7 @@
                 'id-ID');
         }
 
-        document.getElementById('attachments').addEventListener('change', function(e) {
+        document.getElementById('attachments').addEventListener('change', function (e) {
             const list = document.getElementById('fileList');
             list.innerHTML = '';
             Array.from(this.files).forEach(file => {

@@ -16,14 +16,17 @@
                         Selamat datang kembali, <strong style="color: #0f172a;">{{ Auth::user()->name }}</strong> 👋
                     </p>
                 </div>
-                <div style="display: flex; gap: 1rem;">
-                    <a href="{{ route('nota.create') }}"
-                        style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1); transition: all 0.2s;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.15)';"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)'; ">
-                        <span>+</span> Buat Nota Baru
-                    </a>
-                </div>
+                @can('create', App\Models\Nota::class)
+
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="{{ route('nota.create') }}"
+                            style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1); transition: all 0.2s;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.15)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)'; ">
+                            <span>+</span> Buat Nota Baru
+                        </a>
+                    </div>
+                @endcan
             </div>
 
             <!-- Stats Grid -->
@@ -164,63 +167,63 @@
                             </thead>
                             <tbody>
                                 @foreach ($recentNotas as $nota)
-                                                    <tr style="transition: background-color 0.2s;" onmouseover="this.style.background='#f8fafc'"
-                                                        onmouseout="this.style.background='transparent'">
-                                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
-                                                            <a href="{{ route('nota.show', $nota) }}"
-                                                                style="color: #0f172a; text-decoration: none; font-weight: 600; display: inline-block; transition: color 0.2s;"
-                                                                onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='#0f172a'">
-                                                                {{ $nota->nomor }}
-                                                            </a>
-                                                        </td>
-                                                        <td
-                                                            style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 0.95rem;">
-                                                            {{ $nota->created_at->format('d M Y') }}
-                                                        </td>
-                                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
-                                                            <span
-                                                                style="background: #f1f5f9; color: #475569; padding: 0.35rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-                                                                {{ ucfirst($nota->tipe) }}
-                                                            </span>
-                                                        </td>
-                                                        <td
-                                                            style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: 700;">
-                                                            {{ $nota->nominal_formatted }}
-                                                        </td>
-                                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
-                                                            @php
-                                                                $statusColor = match ($nota->status) {
-                                                                    'approved' => '#dcfce7',
-                                                                    'pending' => '#fef3c7',
-                                                                    'rejected' => '#fee2e2',
-                                                                    default => '#f1f5f9',
-                                                                };
-                                                                $statusTextColor = match ($nota->status) {
-                                                                    'approved' => '#15803d',
-                                                                    'pending' => '#b45309',
-                                                                    'rejected' => '#b91c1c',
-                                                                    default => '#475569',
-                                                                };
-                                                            @endphp
-                                     <span
-                                                                style="background: {{ $statusColor }}; color: {{ $statusTextColor }}; padding: 0.35rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">
-                                                                {{ ucfirst($nota->status) }}
-                                                            </span>
-                                                        </td>
-                                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; text-align: right;">
-                                                            <a href="{{ route('nota.show', $nota) }}"
-                                                                style="display: inline-flex; justify-content: center; align-items: center; width: 2rem; height: 2rem; border-radius: 0.5rem; color: #64748b; text-decoration: none; background: #f8fafc; transition: all 0.2s;"
-                                                                onmouseover="this.style.background='#10b981'; this.style.color='white';"
-                                                                onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';"
-                                                                title="Lihat Detail">
-                                                                <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24"
-                                                                    stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                        d="M9 5l7 7-7 7" />
-                                                                </svg>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
+                                    <tr style="transition: background-color 0.2s;" onmouseover="this.style.background='#f8fafc'"
+                                        onmouseout="this.style.background='transparent'">
+                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
+                                            <a href="{{ route('nota.show', $nota) }}"
+                                                style="color: #0f172a; text-decoration: none; font-weight: 600; display: inline-block; transition: color 0.2s;"
+                                                onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='#0f172a'">
+                                                {{ $nota->nomor_nota }}
+                                            </a>
+                                        </td>
+                                        <td
+                                            style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 0.95rem;">
+                                            {{ $nota->created_at->format('d M Y') }}
+                                        </td>
+                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
+                                            <span
+                                                style="background: #f1f5f9; color: #475569; padding: 0.35rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                {{ ucfirst($nota->tipe) }}
+                                            </span>
+                                        </td>
+                                        <td
+                                            style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: 700;">
+                                            {{ $nota->nominal_formatted }}
+                                        </td>
+                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
+                                            @php
+                                                $statusColor = match ($nota->status) {
+                                                    'approved' => '#dcfce7',
+                                                    'pending' => '#fef3c7',
+                                                    'rejected' => '#fee2e2',
+                                                    default => '#f1f5f9',
+                                                };
+                                                $statusTextColor = match ($nota->status) {
+                                                    'approved' => '#15803d',
+                                                    'pending' => '#b45309',
+                                                    'rejected' => '#b91c1c',
+                                                    default => '#475569',
+                                                };
+                                            @endphp
+                                            <span
+                                                style="background: {{ $statusColor }}; color: {{ $statusTextColor }}; padding: 0.35rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">
+                                                {{ ucfirst($nota->status) }}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; text-align: right;">
+                                            <a href="{{ route('nota.show', $nota) }}"
+                                                style="display: inline-flex; justify-content: center; align-items: center; width: 2rem; height: 2rem; border-radius: 0.5rem; color: #64748b; text-decoration: none; background: #f8fafc; transition: all 0.2s;"
+                                                onmouseover="this.style.background='#10b981'; this.style.color='white';"
+                                                onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';"
+                                                title="Lihat Detail">
+                                                <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -229,7 +232,8 @@
                     <div
                         style="text-align: center; padding: 4rem 2rem; border: 2px dashed #e2e8f0; border-radius: 0.75rem; background: #f8fafc; margin-top: 1rem;">
                         <p style="margin-bottom: 1rem; font-size: 3rem; filter: grayscale(1); opacity: 0.5;">📭</p>
-                        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">Belum ada nota</h3>
+                        <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">Belum ada nota
+                        </h3>
                         <p style="color: #64748b; margin-bottom: 1.5rem;">Coba buat nota pertama Anda untuk mulai mengelola.</p>
                         <a href="{{ route('nota.create') }}"
                             style="display: inline-flex; align-items: center; gap: 0.5rem; background: white; color: #10b981; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; border: 1px solid #10b981; transition: all 0.2s;"

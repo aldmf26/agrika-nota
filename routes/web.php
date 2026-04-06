@@ -153,7 +153,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemController::class, 'reset'])
                 ->name('system.reset');
             
-            // TODO: Reports routes
+            // Reports routes
+            Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])
+                ->name('reports.index');
+            Route::get('/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])
+                ->name('reports.export');
         });
     });
 });
