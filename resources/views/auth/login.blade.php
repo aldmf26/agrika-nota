@@ -21,6 +21,7 @@
                 </div>
             @endif
 
+
             @if (session('status'))
                 <div
                     style="margin-bottom: 1rem; padding: 1rem; background-color: #dcfce7; border: 1px solid #86efac; border-radius: 0.375rem;">
@@ -55,7 +56,8 @@
 
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: flex; align-items: center;">
-                        <input type="checkbox" name="remember" style="margin-right: 0.5rem;" {{ old('remember') ? 'checked' : '' }}>
+                        <input type="checkbox" name="remember" style="margin-right: 0.5rem;"
+                            {{ old('remember') ? 'checked' : '' }}>
                         <span style="color: #1b1b18; font-size: 0.875rem;">Ingat saya</span>
                     </label>
                 </div>
