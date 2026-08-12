@@ -10,10 +10,10 @@
             <p class="mt-1 text-sm text-slate-500 sm:text-base">Pengeluaran per divisi tahun <span class="font-bold text-indigo-600">{{ $tahun }}</span>.</p>
         </div>
         
-        <div class="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-center">
+        <div class="filter-toolbar grid grid-cols-2 gap-3 p-3 md:flex md:flex-wrap md:items-center">
             <!-- Year Selector -->
             <form action="{{ route('admin.reports.index') }}" method="GET" class="flex min-w-0 items-center">
-                <select name="tahun" onchange="this.form.submit()" class="block w-full border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-indigo-500 md:w-auto md:px-4">
+                <select name="tahun" onchange="this.form.submit()" class="filter-control md:w-auto">
                     @foreach($availableYears as $y)
                     <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>Tahun {{ $y }}</option>
                     @endforeach
@@ -27,11 +27,11 @@
 
             <!-- Export Buttons -->
             <div class="dropdown relative min-w-0">
-                <button id="exportDropdown" type="button" class="inline-flex w-full items-center justify-center gap-2 bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-all duration-200 hover:bg-emerald-700 md:w-auto md:px-5">
+                <button id="exportDropdown" type="button" class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 md:w-auto md:px-5">
                     📥 Export Excel
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
-                <div id="exportMenu" class="absolute right-0 z-50 mt-2 hidden w-56 overflow-hidden border border-slate-100 bg-white shadow-xl">
+                <div id="exportMenu" class="absolute right-0 z-50 mt-2 hidden w-56 overflow-hidden rounded-lg border border-slate-100 bg-white shadow-xl">
                     <a href="{{ route('admin.reports.export', ['tahun' => $tahun, 'type' => 'summary']) }}" class="block px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
                         📊 Export Rekap (Summary)
                     </a>

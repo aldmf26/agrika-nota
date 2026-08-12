@@ -95,7 +95,10 @@ class NotaController extends Controller
         }
 
         // Paginate dengan mempertahankan query string
-        $notas = $query->paginate(15)->withQueryString();
+        $perPage = in_array(request()->integer('per_page'), [10, 15, 25, 50, 100], true)
+            ? request()->integer('per_page')
+            : 15;
+        $notas = $query->paginate($perPage)->withQueryString();
 
         // Data untuk filter dropdown
         $divisis = Divisi::aktif()->get(['id', 'nama']);

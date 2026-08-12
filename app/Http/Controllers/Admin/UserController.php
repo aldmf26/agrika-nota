@@ -4,16 +4,33 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->get();
+        $perPage = in_array($request->integer('per_page'), [10, 25, 50, 100], true)
+            ? $request->integer('per_page')
+            : 10;
+        $search = trim((string) $request->input('search'));
+
+        $users = User::with('roles')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('roles', fn ($roleQuery) => $roleQuery->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
         $roles = Role::all();
+
         return view('admin.user.index', compact('users', 'roles'));
     }
 
@@ -26,11 +43,15 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
+        try {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return back()->withInput()->with('error', 'Email sudah digunakan oleh user lain.');
+        }
 
         $user->assignRole($validated['role']);
 
@@ -41,18 +62,22 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8',
             'role' => 'required|exists:roles,name',
         ]);
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-        ]);
+        try {
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+            ]);
 
-        if (!empty($validated['password'])) {
-            $user->update(['password' => Hash::make($validated['password'])]);
+            if (! empty($validated['password'])) {
+                $user->update(['password' => Hash::make($validated['password'])]);
+            }
+        } catch (UniqueConstraintViolationException) {
+            return back()->withInput()->with('error', 'Email sudah digunakan oleh user lain.');
         }
 
         $user->syncRoles($validated['role']);

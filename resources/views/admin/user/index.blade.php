@@ -15,8 +15,28 @@
             </button>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-            <table class="w-full text-left border-collapse">
+        <form method="GET" action="{{ route('admin.users.index') }}" data-debounce-search
+            class="filter-toolbar mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <label class="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-slate-600">
+                Tampilkan
+                <select name="per_page" onchange="this.form.submit()" class="filter-control-compact w-20">
+                    @foreach ([10, 25, 50, 100] as $size)
+                        <option value="{{ $size }}" @selected($users->perPage() === $size)>{{ $size }}</option>
+                    @endforeach
+                </select>
+                data
+            </label>
+            <div class="flex w-full gap-2 sm:max-w-md">
+                <input type="search" name="search" value="{{ request('search') }}" data-search-input placeholder="Cari nama, email, atau role..."
+                    autocomplete="off" class="filter-control min-w-0 flex-1">
+                @if (request('search'))
+                    <a href="{{ route('admin.users.index', ['per_page' => $users->perPage()]) }}" class="filter-button-secondary">Reset</a>
+                @endif
+            </div>
+        </form>
+
+        <div class="overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-xl shadow-gray-200/50">
+            <table class="w-full min-w-[720px] text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-50/50">
                         <th class="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest border-b">Nama /
@@ -75,6 +95,24 @@
                 </tbody>
             </table>
         </div>
+        @if ($users->total() > 0)
+            <div class="mt-4 flex flex-col gap-3 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+                <p>Menampilkan {{ $users->firstItem() }}-{{ $users->lastItem() }} dari {{ $users->total() }} data</p>
+                {{ $users->links() }}
+            </div>
+        @endif
+
+        <script>
+            (() => {
+                const form = document.querySelector('[data-debounce-search]');
+                const input = form?.querySelector('[data-search-input]');
+                let timer;
+                input?.addEventListener('input', () => {
+                    window.clearTimeout(timer);
+                    timer = window.setTimeout(() => form.requestSubmit(), 450);
+                });
+            })();
+        </script>
     </div>
 
     <!-- MODAL: CREATE USER -->

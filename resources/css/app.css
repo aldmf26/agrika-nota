@@ -9,3 +9,33 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer components {
+    .filter-toolbar {
+        @apply rounded-lg border border-slate-200 bg-white p-4 shadow-sm;
+    }
+
+    .filter-control {
+        @apply h-11 w-full rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100;
+    }
+
+    .filter-control-compact {
+        @apply h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100;
+    }
+
+    .filter-label {
+        @apply text-xs font-bold uppercase text-slate-500;
+    }
+
+    .filter-button-primary {
+        @apply inline-flex h-11 items-center justify-center rounded-lg bg-indigo-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-200;
+    }
+
+    .filter-button-secondary {
+        @apply inline-flex h-11 items-center justify-center rounded-lg bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-200;
+    }
+}
+
+input[type='search']::-webkit-search-cancel-button {
+    cursor: pointer;
+}

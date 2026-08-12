@@ -25,7 +25,7 @@
                 'search', 'status', 'tipe', 'divisi_id', 'filter_type', 'tanggal', 'bulan', 'tahun', 'start_date', 'end_date',
             ]))->filter(fn ($value) => filled($value) && $value !== 'all')->isNotEmpty();
         @endphp
-        <div class="mb-6 border border-gray-100 bg-white shadow-sm">
+        <div class="filter-toolbar mb-6 p-0">
             <button type="button" id="historyFilterButton" aria-controls="historyFilterPanel"
                 aria-expanded="{{ $hasActiveFilter ? 'true' : 'false' }}"
                 class="flex w-full items-center justify-between px-4 py-4 text-left text-sm font-semibold uppercase text-slate-600 md:hidden">
@@ -40,12 +40,11 @@
                 <form method="GET" action="{{ route('nota.index') }}" class="flex flex-col gap-4">
                 
                 <!-- Baris ke-1: Pencarian Text & Tipe/Status -->
-                <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-4">
+                <div class="grid gap-3 md:grid-cols-[minmax(240px,1fr)_repeat(4,minmax(135px,auto))]">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No Nota, Keterangan, Nominal..." 
-                        class="w-full flex-grow border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:min-w-[200px] md:w-auto">
+                        autocomplete="off" class="filter-control">
                     
-                    <select name="status" class="w-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:w-auto"
-                        onchange="this.form.submit()" style="min-width: 140px; cursor: pointer; outline: none;">
+                    <select name="status" class="filter-control cursor-pointer" onchange="this.form.submit()">
                         <option value="all">Semua Status</option>
                         @foreach ($statuses as $s)
                             <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
@@ -54,8 +53,7 @@
                         @endforeach
                     </select>
 
-                    <select name="tipe" class="w-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:w-auto"
-                        onchange="this.form.submit()" style="min-width: 140px; cursor: pointer; outline: none;">
+                    <select name="tipe" class="filter-control cursor-pointer" onchange="this.form.submit()">
                         <option value="all">Semua Tipe</option>
                         @foreach ($tipes as $t)
                             <option value="{{ $t }}" {{ request('tipe') === $t ? 'selected' : '' }}>
@@ -64,8 +62,7 @@
                         @endforeach
                     </select>
 
-                    <select name="divisi_id" class="w-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:w-auto"
-                        onchange="this.form.submit()" style="min-width: 140px; cursor: pointer; outline: none;">
+                    <select name="divisi_id" class="filter-control cursor-pointer" onchange="this.form.submit()">
                         <option value="">Semua Divisi</option>
                         @foreach ($divisis as $d)
                             <option value="{{ $d->id }}" {{ request('divisi_id') == $d->id ? 'selected' : '' }}>
@@ -73,14 +70,23 @@
                             </option>
                         @endforeach
                     </select>
+
+                    <label class="filter-control flex items-center justify-between gap-2 whitespace-nowrap">
+                        Tampilkan
+                        <select name="per_page" onchange="this.form.submit()" class="border-0 bg-transparent p-0 text-sm font-bold outline-none focus:ring-0">
+                            @foreach ([10, 15, 25, 50, 100] as $size)
+                                <option value="{{ $size }}" @selected($notas->perPage() === $size)>{{ $size }}</option>
+                            @endforeach
+                        </select>
+                    </label>
                 </div>
                 
                 <!-- Baris ke-2: Filter Waktu Berjenjang -->
-                <div class="flex flex-col gap-3 border-t border-dashed border-slate-200 pt-4 md:flex-row md:flex-wrap md:items-center md:gap-4">
+                <div class="flex flex-col gap-3 border-t border-slate-100 pt-4 md:flex-row md:flex-wrap md:items-end">
                     <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                        <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Jenis Filter:</span>
+                        <span class="filter-label">Jenis Filter</span>
                         <select name="filter_type" id="filter_type" onchange="toggleFilterInputs()" 
-                            class="w-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-400 md:w-auto">
+                            class="filter-control md:w-44">
                             <option value="all" {{ request('filter_type') == 'all' ? 'selected' : '' }}>Semua Data</option>
                             <option value="date" {{ request('filter_type') == 'date' ? 'selected' : '' }}>Per Tanggal</option>
                             <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>Per Bulan</option>
@@ -92,44 +98,44 @@
                     <!-- Input: Per Tanggal -->
                     <div id="div_date" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Pilih:</span>
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none">
+                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="filter-control">
                     </div>
 
                     <!-- Input: Per Bulan/Tahun -->
                     <div id="div_month" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Bulan:</span>
-                        <select name="bulan" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none">
+                        <select name="bulan" class="filter-control md:w-36">
                             <option value="">--</option>
                             @for ($i=1; $i<=12; $i++)
                                 <option value="{{ $i }}" {{ request('bulan', date('n')) == $i ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $i, 10)) }}</option>
                             @endfor
                         </select>
                         <span class="text-xs font-bold text-gray-500">Tahun:</span>
-                        <input type="number" name="tahun" value="{{ request('tahun', date('Y')) }}" placeholder="2024" min="2000" max="2100" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none" style="width: 100px;">
+                        <input type="number" name="tahun" value="{{ request('tahun', date('Y')) }}" placeholder="2024" min="2000" max="2100" class="filter-control md:w-28">
                     </div>
 
                     <!-- Input: Per Tahun Only -->
                     <div id="div_year" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Tahun:</span>
-                        <input type="number" name="tahun" id="tahun_only" value="{{ request('tahun', date('Y')) }}" placeholder="2024" min="2000" max="2100" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none" style="width: 100px;">
+                        <input type="number" name="tahun" id="tahun_only" value="{{ request('tahun', date('Y')) }}" placeholder="2024" min="2000" max="2100" class="filter-control md:w-28">
                     </div>
 
                     <!-- Input: Custom Range -->
                     <div id="div_custom" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Dari:</span>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="filter-control">
                         <span class="text-xs font-bold text-gray-500">Sampai:</span>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="filter-control">
                     </div>
 
                     <div class="flex-grow"></div>
 
-                    <button type="submit" class="w-full bg-indigo-600 px-6 py-2 text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700 md:w-auto">
+                    <button type="submit" class="filter-button-primary w-full md:w-auto">
                         TERAPKAN FILTER
                     </button>
 
                     <button type="button" onclick="window.location.href='{{ route('nota.index') }}'"
-                        class="w-full bg-gray-100 px-5 py-2 text-sm font-bold text-gray-500 transition-colors hover:bg-gray-200 md:w-auto">
+                        class="filter-button-secondary w-full md:w-auto">
                         RESET
                     </button>
                     
@@ -204,17 +210,17 @@
         </div>
 
         <!-- Desktop Table -->
-        <div class="hidden overflow-x-auto border border-gray-100 bg-white shadow-sm md:block" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
-            <table class="w-full" style="border-collapse: separate; border-spacing: 0;">
+        <div class="hidden overflow-x-auto rounded-3xl border border-gray-100 bg-white shadow-xl shadow-gray-200/50 md:block">
+            <table class="w-full min-w-[900px] text-left border-collapse">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0; border-top-left-radius: 0.75rem;">Tanggal</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Tanggal</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Nomor Nota</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Tipe</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Nominal</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Divisi</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0; border-top-right-radius: 0.75rem;">Aksi</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider" style="border-bottom: 2px solid #e2e8f0;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -274,7 +280,8 @@
 
         <!-- Pagination -->
         @if ($notas->total() > 0)
-            <div class="mt-6 flex justify-center custom-pagination">
+            <div class="custom-pagination mt-6">
+                <p class="mb-3 text-sm text-gray-500 md:mb-0">Menampilkan {{ $notas->firstItem() }}-{{ $notas->lastItem() }} dari {{ $notas->total() }} data</p>
                 <style>
                     /* Fix Tailwinds paginator output that relies on unavailable utilities */
                     .custom-pagination nav { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
