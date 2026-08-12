@@ -20,6 +20,9 @@ class NotaPolicy
      */
     public function view(User $user, Nota $nota): bool
     {
+        if ($user->hasRole('approver')) {
+            return $nota->status === 'approved';
+        }
         // Super admin atau approver bisa lihat semua
         if ($user->hasPermissionTo('nota.view-all')) {
             return true;
@@ -82,7 +85,7 @@ class NotaPolicy
      */
     public function approve(User $user, Nota $nota): bool
     {
-        return $user->hasPermissionTo('nota.approve') && $nota->status === 'pending';
+        return $user->hasRole('super_admin') && $nota->status === 'pending';
     }
 
     /**
@@ -90,7 +93,7 @@ class NotaPolicy
      */
     public function reject(User $user, Nota $nota): bool
     {
-        return $user->hasPermissionTo('nota.reject') && $nota->status === 'pending';
+        return $user->hasRole('super_admin') && $nota->status === 'pending';
     }
 
     /**
@@ -98,7 +101,7 @@ class NotaPolicy
      */
     public function void(User $user, Nota $nota): bool
     {
-        return $user->hasPermissionTo('nota.void') && in_array($nota->status, ['approved', 'rejected']);
+        return $user->hasRole('super_admin') && in_array($nota->status, ['approved', 'rejected']);
     }
 
     /**

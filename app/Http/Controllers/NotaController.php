@@ -48,8 +48,12 @@ class NotaController extends Controller
             $query->where('user_id', auth()->id());
         }
 
+        if (auth()->user()->hasRole('approver')) {
+            $query->where('status', 'approved');
+        }
+
         // Filter by status (dari query string)
-        if (request('status') && request('status') !== 'all') {
+        if (! auth()->user()->hasRole('approver') && request('status') && request('status') !== 'all') {
             $query->where('status', request('status'));
         }
 

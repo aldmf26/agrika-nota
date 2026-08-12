@@ -25,10 +25,16 @@
                             class="px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('nota.*') ? 'bg-green-50 text-green-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                             Nota
                         </a>
+                        @if (auth()->user()->can('weekly-review.view'))
+                            <a href="{{ route('weekly-reviews.index') }}"
+                                class="px-3 py-2 text-sm font-medium {{ request()->routeIs('weekly-reviews.*') ? 'bg-green-50 text-green-700' : 'text-gray-600 hover:bg-gray-50' }}">Pemeriksaan Mingguan</a>
+                        @endif
+                        @if (auth()->user()->hasRole('super_admin'))
                         <a href="{{ route('admin.reports.index') }}"
                             class="px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.reports.*') ? 'bg-orange-50 font-bold text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                             Laporan
                         </a>
+                        @endif
                         @if (auth()->user()->hasRole('super_admin'))
                             <span class="mx-2 h-6 w-px bg-gray-200"></span>
                             <a href="{{ route('admin.users.index') }}"
@@ -88,10 +94,15 @@
                         class="px-3 py-3 text-sm font-medium {{ request()->routeIs('nota.*') ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50' }}">
                         Nota
                     </a>
+                    @if (auth()->user()->can('weekly-review.view'))
+                        <a href="{{ route('weekly-reviews.index') }}" class="px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">Pemeriksaan Mingguan</a>
+                    @endif
+                    @if (auth()->user()->hasRole('super_admin'))
                     <a href="{{ route('admin.reports.index') }}"
                         class="px-3 py-3 text-sm font-medium {{ request()->routeIs('admin.reports.*') ? 'bg-orange-50 text-orange-700' : 'text-gray-700 hover:bg-gray-50' }}">
                         Laporan
                     </a>
+                    @endif
                     @if (auth()->user()->hasRole('super_admin'))
                         <a href="{{ route('admin.users.index') }}" class="px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">User</a>
                         <a href="{{ route('admin.divisi.index') }}" class="px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">Sistem</a>

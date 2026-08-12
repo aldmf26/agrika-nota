@@ -107,6 +107,11 @@ class Nota extends Model
         return $this->hasMany(NotaAttachment::class);
     }
 
+    public function issues(): HasMany
+    {
+        return $this->hasMany(NotaIssue::class);
+    }
+
     public function depositLog(): HasMany
     {
         return $this->hasMany(DepositLog::class);

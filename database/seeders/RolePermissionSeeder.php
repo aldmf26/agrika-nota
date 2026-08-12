@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
     /**
      * Seed the application's role & permission.
-     * 
+     *
      * Run: php artisan db:seed --class=RolePermissionSeeder
      */
     public function run(): void
@@ -30,6 +30,9 @@ class RolePermissionSeeder extends Seeder
             'nota.reject',
             'nota.void',
             'nota.export',
+            'weekly-review.view',
+            'weekly-review.close',
+            'weekly-review.report-issue',
 
             // User management
             'user.manage',
@@ -56,15 +59,13 @@ class RolePermissionSeeder extends Seeder
             'deposit.view',
         ]);
 
-        // 2. APPROVER - Review semua nota, approve/reject, tambah catatan
+        // 2. APPROVER - Pemeriksa mingguan (Miss Tesa)
         $approverRole = Role::firstOrCreate(['name' => 'approver']);
         $approverRole->syncPermissions([
             'nota.view-all',
-            'nota.approve',
-            'nota.reject',
-            'nota.void',
-            'nota.export',
-            'deposit.view',
+            'weekly-review.view',
+            'weekly-review.close',
+            'weekly-review.report-issue',
         ]);
 
         // 3. SUPER_ADMIN - Semua akses + kelola user + kelola divisi/lokasi

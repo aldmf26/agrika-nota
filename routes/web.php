@@ -82,9 +82,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /**
      * DASHBOARD - Home page for logged in users
      */
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', function (\App\Services\WeeklyReviewService $weeklyReviews) {
+        if (auth()->user()->hasRole('approver')) {
+            $year = now()->year;
+            $month = now()->month;
+            $weeks = collect(range(1, 4))->mapWithKeys(fn ($week) => [$week => $weeklyReviews->summary($year, $month, $week)]);
+            return view('weekly-reviews.dashboard', compact('year', 'month', 'weeks'));
+        }
         return view('dashboard');
     })->name('dashboard');
+
+    Route::middleware('permission:weekly-review.view')->group(function () {
+        Route::get('/weekly-reviews', [\App\Http\Controllers\WeeklyReviewController::class, 'index'])->name('weekly-reviews.index');
+        Route::get('/weekly-reviews/{year}/{month}/{week}', [\App\Http\Controllers\WeeklyReviewController::class, 'show'])->name('weekly-reviews.show');
+        Route::post('/weekly-reviews/{year}/{month}/{week}/close', [\App\Http\Controllers\WeeklyReviewController::class, 'close'])
+            ->middleware('permission:weekly-review.close')->name('weekly-reviews.close');
+        Route::post('/weekly-reviews/issues/{nota}', [\App\Http\Controllers\WeeklyReviewController::class, 'report'])
+            ->middleware('permission:weekly-review.report-issue')->name('weekly-reviews.issues.store');
+    });
 
     /**
      * NOTA ROUTES - CRUD dan approval
@@ -167,6 +182,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('reports.details');
             Route::get('/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])
                 ->name('reports.export');
+            Route::post('/weekly-review-issues/{issue}/resolve', [\App\Http\Controllers\WeeklyReviewController::class, 'resolve'])
+                ->name('weekly-review-issues.resolve');
         });
     });
 });
