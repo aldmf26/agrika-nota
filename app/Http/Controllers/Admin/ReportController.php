@@ -88,6 +88,62 @@ class ReportController extends Controller
     }
 
     /**
+     * Tampilkan nota pembentuk nilai rekap.
+     */
+    public function details(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'bulan' => ['nullable', 'integer', 'between:1,12'],
+            'divisi_id' => ['nullable', 'integer', 'exists:divisis,id'],
+        ]);
+
+        $tahun = (int) $validated['tahun'];
+        $bulan = isset($validated['bulan']) ? (int) $validated['bulan'] : null;
+        $divisiId = isset($validated['divisi_id']) ? (int) $validated['divisi_id'] : null;
+        $divisi = $divisiId ? Divisi::findOrFail($divisiId) : null;
+
+        $notas = Nota::with(['user', 'divisi', 'items.divisi'])
+            ->where('tahun', $tahun)
+            ->where('status', 'approved')
+            ->when($bulan, fn ($query) => $query->where('bulan', $bulan))
+            ->when($divisiId, function ($query) use ($divisiId) {
+                $query->where(function ($query) use ($divisiId) {
+                    $query->where(function ($query) use ($divisiId) {
+                        $query->where('tipe', '!=', 'split')->where('divisi_id', $divisiId);
+                    })->orWhere(function ($query) use ($divisiId) {
+                        $query->where('tipe', 'split')->whereHas('items', fn ($items) => $items->where('divisi_id', $divisiId));
+                    });
+                });
+            })
+            ->orderByDesc('tanggal_nota')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (Nota $nota) use ($divisiId) {
+                $nota->report_amount = $nota->tipe === 'split'
+                    ? ($divisiId
+                        ? (int) optional($nota->items->firstWhere('divisi_id', $divisiId))->nominal
+                        : (int) $nota->items->sum('nominal'))
+                    : (int) $nota->nominal;
+
+                return $nota;
+            });
+
+        $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $title = collect([
+            $divisi?->nama,
+            $bulan ? $monthNames[$bulan] : null,
+            $tahun,
+        ])->filter()->join(' · ');
+
+        return view('admin.reports.partials.detail-list', [
+            'notas' => $notas,
+            'title' => $title,
+            'total' => $notas->sum('report_amount'),
+        ]);
+    }
+
+    /**
      * Export data ke Excel (CSV)
      */
     public function export(Request $request)

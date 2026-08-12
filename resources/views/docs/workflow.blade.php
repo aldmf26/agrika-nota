@@ -430,7 +430,7 @@
                         <li>Membuat nota baru dengan type yang sesuai</li>
                         <li>Mengisi semua field yang diperlukan dengan benar</li>
                         <li>Memastikan perhitungan sudah sesuai (sistem sudah otomatis)</li>
-                        <li>Upload bukti pendukung (foto, dokumen) - <strong>WAJIB</strong></li>
+                        <li>Upload bukti pendukung (foto) jika tersedia - opsional</li>
                         <li>Klik "Simpan" → Nota LANGSUNG ke status Pending</li>
                         <li>Nota otomatis dikirim ke approver untuk review</li>
                         <li>Anda masih bisa EDIT selama approver belum approve/reject</li>
@@ -506,13 +506,13 @@
                             <td><strong>2</strong></td>
                             <td>Isi form dengan benar dan lengkap</td>
                             <td>-</td>
-                            <td>Semua field wajib diisi, lampiran WAJIB</td>
+                            <td>Isi semua field wajib; lampiran boleh dikosongkan</td>
                         </tr>
                         <tr>
                             <td><strong>3</strong></td>
                             <td>Upload bukti pendukung</td>
                             <td>-</td>
-                            <td>Minimal 1 file (foto, PDF, dokumen) - <strong>WAJIB</strong></td>
+                            <td>Opsional; gunakan foto JPG, PNG, atau HEIC jika ada</td>
                         </tr>
                         <tr>
                             <td><strong>4</strong></td>

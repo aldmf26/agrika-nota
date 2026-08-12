@@ -4,8 +4,8 @@
 
 @section('content')
     <div class="max-w-3xl mx-auto">
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">📝 Input Nota Baru</h1>
+        <div class="mb-4 sm:mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">📝 Input Nota Baru</h1>
             <p class="text-gray-600 mt-1">Lengkapi form di bawah untuk mencatat nota baru</p>
         </div>
 
@@ -37,7 +37,7 @@
                 </div>
 
                 <!-- COMMON FIELDS -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-900 mb-2">
                             Tanggal <span class="text-red-500">*</span>
@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-900 mb-2">
                             Nomor Nota (Otomatis)
@@ -114,7 +114,7 @@
 
                 <!-- SPECIAL FIELDS UNTUK REVENUE SHARING -->
                 <div id="revenueSharingFields" class="hidden space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-900 mb-2">Base Amount (Rp)</label>
                             <input type="text" id="base_amount_display"
@@ -140,7 +140,7 @@
 
                 <!-- SPECIAL FIELDS UNTUK KELEBIHAN BAYAR -->
                 <div id="overpaymentFields" class="hidden space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-900 mb-2">Nominal Seharusnya (Rp)</label>
                             <input type="text" id="nominal_seharusnya_display"
@@ -169,7 +169,7 @@
 
                 <!-- SPECIAL FIELDS UNTUK SPLIT TAGIHAN -->
                 <div id="splitFields" class="hidden space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-900 mb-2">
                                 Nominal Total (Rp) <span class="text-red-500">*</span>
@@ -240,12 +240,12 @@
                 <!-- FILE UPLOAD -->
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-2">
-                        Foto Lampiran <span class="text-red-500">*</span>
+                        Foto Lampiran <span class="text-gray-500 text-xs">(Opsional)</span>
                     </label>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-green-500 transition-colors"
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center cursor-pointer hover:border-green-500 transition-colors"
                         onclick="document.getElementById('attachments').click()">
                         <input type="file" id="attachments" name="attachments[]" class="hidden"
-                            accept=".jpg,.jpeg,.png,.heic" multiple required>
+                            accept=".jpg,.jpeg,.png,.heic" multiple>
                         <p class="text-gray-600">
                             📸 Klik untuk upload atau drag & drop<br>
                             <span class="text-xs text-gray-500">JPG, PNG, HEIC (Max 5MB per file)</span>
@@ -261,7 +261,7 @@
                 </div>
 
                 <!-- ACTIONS -->
-                <div class="flex gap-4 pt-4">
+                <div class="flex flex-col gap-3 pt-4 sm:flex-row sm:gap-4">
                     <button type="submit"
                         class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
                         💾 Simpan Draft

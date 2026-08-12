@@ -162,6 +162,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Reports routes
             Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])
                 ->name('reports.index');
+            Route::get('/reports/details', [\App\Http\Controllers\Admin\ReportController::class, 'details'])
+                ->name('reports.details');
             Route::get('/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])
                 ->name('reports.export');
         });

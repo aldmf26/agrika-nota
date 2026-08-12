@@ -4,13 +4,13 @@
 
 @section('content')
     <div class="mb-6">
-        <div class="flex justify-between items-end mb-6 flex-wrap gap-4" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 1.5rem;">
+        <div class="mb-6 flex flex-col items-stretch gap-4 border-b-2 border-gray-100 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900" style="letter-spacing: -0.02em;">📋 History Nota</h1>
+                <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">📋 History Nota</h1>
                 <p class="text-gray-600 mt-1">Lihat dan kelola semua nota Anda secara rapi</p>
             </div>
             @can('create', App\Models\Nota::class)
-                <a href="{{ route('nota.create') }}"
+                <a href="{{ route('nota.create') }}" class="inline-flex w-full items-center justify-center gap-2 sm:w-auto"
                     style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1); transition: all 0.2s;"
                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.15)';"
                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)';" id="btn_input_nota">
@@ -20,16 +20,31 @@
         </div>
 
         <!-- Filter Section -->
-        <div class="bg-white rounded-xl mb-6 shadow-sm border border-gray-100 p-5 transition-shadow" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
-            <div style="font-size: 0.875rem; font-weight: 600; color: #64748b; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">🔍 Filter & Pencarian</div>
-            <form method="GET" action="{{ route('nota.index') }}" class="flex flex-col gap-4">
+        @php
+            $hasActiveFilter = collect(request()->only([
+                'search', 'status', 'tipe', 'divisi_id', 'filter_type', 'tanggal', 'bulan', 'tahun', 'start_date', 'end_date',
+            ]))->filter(fn ($value) => filled($value) && $value !== 'all')->isNotEmpty();
+        @endphp
+        <div class="mb-6 border border-gray-100 bg-white shadow-sm">
+            <button type="button" id="historyFilterButton" aria-controls="historyFilterPanel"
+                aria-expanded="{{ $hasActiveFilter ? 'true' : 'false' }}"
+                class="flex w-full items-center justify-between px-4 py-4 text-left text-sm font-semibold uppercase text-slate-600 md:hidden">
+                <span>🔍 Filter & Pencarian</span>
+                <svg id="historyFilterChevron" class="h-5 w-5 transition-transform {{ $hasActiveFilter ? 'rotate-180' : '' }}"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div id="historyFilterPanel" class="{{ $hasActiveFilter ? '' : 'hidden' }} border-t border-gray-100 p-4 md:block md:border-t-0 md:p-5">
+                <div class="mb-4 hidden text-sm font-semibold uppercase text-slate-500 md:block">🔍 Filter & Pencarian</div>
+                <form method="GET" action="{{ route('nota.index') }}" class="flex flex-col gap-4">
                 
                 <!-- Baris ke-1: Pencarian Text & Tipe/Status -->
-                <div class="flex gap-4 flex-wrap items-center">
+                <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-4">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No Nota, Keterangan, Nominal..." 
-                        class="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors flex-grow" style="min-width: 200px; outline: none;">
+                        class="w-full flex-grow border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:min-w-[200px] md:w-auto">
                     
-                    <select name="status" class="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors"
+                    <select name="status" class="w-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:w-auto"
                         onchange="this.form.submit()" style="min-width: 140px; cursor: pointer; outline: none;">
                         <option value="all">Semua Status</option>
                         @foreach ($statuses as $s)
@@ -39,7 +54,7 @@
                         @endforeach
                     </select>
 
-                    <select name="tipe" class="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors"
+                    <select name="tipe" class="w-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:w-auto"
                         onchange="this.form.submit()" style="min-width: 140px; cursor: pointer; outline: none;">
                         <option value="all">Semua Tipe</option>
                         @foreach ($tipes as $t)
@@ -49,7 +64,7 @@
                         @endforeach
                     </select>
 
-                    <select name="divisi_id" class="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors"
+                    <select name="divisi_id" class="w-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm transition-colors focus:bg-white md:w-auto"
                         onchange="this.form.submit()" style="min-width: 140px; cursor: pointer; outline: none;">
                         <option value="">Semua Divisi</option>
                         @foreach ($divisis as $d)
@@ -61,11 +76,11 @@
                 </div>
                 
                 <!-- Baris ke-2: Filter Waktu Berjenjang -->
-                <div class="flex gap-4 flex-wrap items-center" style="border-top: 1px dashed #e2e8f0; padding-top: 1rem;">
-                    <div class="flex items-center gap-3">
+                <div class="flex flex-col gap-3 border-t border-dashed border-slate-200 pt-4 md:flex-row md:flex-wrap md:items-center md:gap-4">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
                         <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Jenis Filter:</span>
                         <select name="filter_type" id="filter_type" onchange="toggleFilterInputs()" 
-                            class="px-4 py-2 border border-indigo-100 rounded-lg text-sm bg-indigo-50 font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-400">
+                            class="w-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-400 md:w-auto">
                             <option value="all" {{ request('filter_type') == 'all' ? 'selected' : '' }}>Semua Data</option>
                             <option value="date" {{ request('filter_type') == 'date' ? 'selected' : '' }}>Per Tanggal</option>
                             <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>Per Bulan</option>
@@ -75,13 +90,13 @@
                     </div>
 
                     <!-- Input: Per Tanggal -->
-                    <div id="div_date" class="hidden flex items-center gap-2">
+                    <div id="div_date" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Pilih:</span>
                         <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none">
                     </div>
 
                     <!-- Input: Per Bulan/Tahun -->
-                    <div id="div_month" class="hidden flex items-center gap-2">
+                    <div id="div_month" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Bulan:</span>
                         <select name="bulan" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none">
                             <option value="">--</option>
@@ -94,13 +109,13 @@
                     </div>
 
                     <!-- Input: Per Tahun Only -->
-                    <div id="div_year" class="hidden flex items-center gap-2">
+                    <div id="div_year" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Tahun:</span>
                         <input type="number" name="tahun" id="tahun_only" value="{{ request('tahun', date('Y')) }}" placeholder="2024" min="2000" max="2100" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white outline-none" style="width: 100px;">
                     </div>
 
                     <!-- Input: Custom Range -->
-                    <div id="div_custom" class="hidden flex items-center gap-2">
+                    <div id="div_custom" class="hidden flex flex-col gap-2 md:flex-row md:items-center">
                         <span class="text-xs font-bold text-gray-500">Dari:</span>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
                         <span class="text-xs font-bold text-gray-500">Sampai:</span>
@@ -109,12 +124,12 @@
 
                     <div class="flex-grow"></div>
 
-                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold transition-all hover:bg-indigo-700 shadow-md">
+                    <button type="submit" class="w-full bg-indigo-600 px-6 py-2 text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700 md:w-auto">
                         TERAPKAN FILTER
                     </button>
 
                     <button type="button" onclick="window.location.href='{{ route('nota.index') }}'"
-                        class="px-5 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-bold hover:bg-gray-200 transition-colors">
+                        class="w-full bg-gray-100 px-5 py-2 text-sm font-bold text-gray-500 transition-colors hover:bg-gray-200 md:w-auto">
                         RESET
                     </button>
                     
@@ -141,14 +156,55 @@
                         }
                         
                         // Run once on load
-                        document.addEventListener('DOMContentLoaded', toggleFilterInputs);
+                        document.addEventListener('DOMContentLoaded', () => {
+                            toggleFilterInputs();
+
+                            const button = document.getElementById('historyFilterButton');
+                            const panel = document.getElementById('historyFilterPanel');
+                            const chevron = document.getElementById('historyFilterChevron');
+
+                            button?.addEventListener('click', () => {
+                                const isOpen = !panel.classList.contains('hidden');
+                                panel.classList.toggle('hidden');
+                                button.setAttribute('aria-expanded', String(!isOpen));
+                                chevron.classList.toggle('rotate-180');
+                            });
+                        });
                     </script>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
 
-        <!-- Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+        <!-- Mobile List -->
+        <div class="divide-y divide-gray-100 border border-gray-100 bg-white shadow-sm md:hidden">
+            @forelse($notas as $nota)
+                <a href="{{ route('nota.show', $nota) }}" class="block px-4 py-4 transition-colors active:bg-gray-50">
+                    <div class="mb-2 flex items-start justify-between gap-3">
+                        <span class="text-xs font-medium text-gray-500">{{ $nota->tanggal_nota->format('d M Y') }}</span>
+                        <x-status-badge :status="$nota->status" class="shrink-0" />
+                    </div>
+                    <div class="flex items-baseline justify-between gap-3">
+                        <span class="min-w-0 truncate text-sm font-bold text-gray-900">{{ $nota->nomor_nota ?? '(digital)' }}</span>
+                        <span class="shrink-0 text-base font-bold text-gray-900">{{ $nota->nominal_formatted }}</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between gap-3 text-xs text-gray-500">
+                        <span class="min-w-0 truncate">{{ $nota->divisi->nama ?? '-' }} · {{ ucfirst(str_replace('_', ' ', $nota->tipe)) }}</span>
+                        <svg class="h-5 w-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </a>
+            @empty
+                <div class="px-4 py-12 text-center">
+                    <p class="text-lg font-bold text-gray-900">Tidak ada nota ditemukan</p>
+                    <p class="mt-1 text-sm text-gray-500">Coba sesuaikan filter pencarian Anda</p>
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden overflow-x-auto border border-gray-100 bg-white shadow-sm md:block" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
             <table class="w-full" style="border-collapse: separate; border-spacing: 0;">
                 <thead class="bg-gray-50">
                     <tr>

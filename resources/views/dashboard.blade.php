@@ -3,13 +3,11 @@
 @section('title', 'Dashboard')
 
 @section('content')
-    <div style="min-height: 100vh; padding: 2.5rem 1rem; background: #f8fafc;">
+    <div class="min-h-screen bg-slate-50 py-2 sm:px-4 sm:py-8">
         <div class="container max-w-7xl mx-auto">
-            <div
-                style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+            <div class="mb-6 flex flex-col items-stretch justify-between gap-4 sm:mb-10 sm:flex-row sm:items-end">
                 <div>
-                    <h1
-                        style="font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; letter-spacing: -0.02em;">
+                    <h1 class="mb-2 text-2xl font-extrabold text-slate-900 sm:text-4xl">
                         Dashboard Interaktif
                     </h1>
                     <p style="color: #64748b; font-size: 1rem;">
@@ -18,8 +16,9 @@
                 </div>
                 @can('create', App\Models\Nota::class)
 
-                    <div style="display: flex; gap: 1rem;">
+                    <div class="flex">
                         <a href="{{ route('nota.create') }}"
+                            class="w-full justify-center sm:w-auto"
                             style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1); transition: all 0.2s;"
                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.15)';"
                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)'; ">
@@ -30,8 +29,7 @@
             </div>
 
             <!-- Stats Grid -->
-            <div
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:mb-12 xl:grid-cols-4">
                 <!-- Total Nota -->
                 <div style="background: white; padding: 1.75rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;"
                     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';"
@@ -118,12 +116,9 @@
             </div>
 
             <!-- Main Content Area: Recent Notes -->
-            <div
-                style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0;">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                    <h2
-                        style="font-size: 1.5rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 0.5rem;">
+            <div class="border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
+                <div class="mb-6 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900 sm:text-2xl">
                         <span style="font-size: 1.5rem;">📝</span> Nota Terbaru
                     </h2>
                     <a href="{{ route('nota.index') }}"
@@ -141,8 +136,8 @@
                 @endphp
 
                 @if ($recentNotas->count() > 0)
-                    <div style="overflow-x: auto; border-radius: 0.5rem;">
-                        <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                    <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                        <table class="min-w-[720px]" style="width: 100%; border-collapse: separate; border-spacing: 0;">
                             <thead>
                                 <tr style="background: #f8fafc;">
                                     <th
