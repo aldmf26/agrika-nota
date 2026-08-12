@@ -46,7 +46,12 @@
                             @foreach ($nota->items as $item)
                                 <tr>
                                     <td class="px-4 py-2">{{ $item->divisi->nama }}</td>
-                                    <td class="px-4 py-2 text-right font-semibold">{{ $item->nominalFormatted() }}</td>
+                                    <td class="px-4 py-2 text-right font-semibold">
+                                        {{ $item->nominalFormatted() }}
+                                        @if ($item->persentase !== null)
+                                            <span class="block text-xs font-normal text-gray-500">{{ number_format($item->persentase, 2, ',', '.') }}%</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

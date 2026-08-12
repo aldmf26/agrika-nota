@@ -14,7 +14,8 @@ Route::get('/', function () {
 /**
  * PUBLIC NOTA VIEW - View nota detail without login
  */
-Route::get('/v/{nomor_nota}', [\App\Http\Controllers\PublicNotaController::class, 'show'])
+Route::get('/v/{token}', [\App\Http\Controllers\PublicNotaController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{12}')
     ->name('nota.public_view');
 
 /**
@@ -53,7 +54,7 @@ Route::post('/login', function (\Illuminate\Http\Request $request) {
     return back()->withErrors([
         'email' => 'Email atau password salah.',
     ])->onlyInput('email');
-})->middleware('guest');
+})->middleware(['guest', 'throttle:login']);
 
 /**
  * REGISTER - Disabled publicly (Now handled by Super Admin) 

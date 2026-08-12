@@ -50,7 +50,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div id="divisionField">
                         <label class="block text-sm font-medium text-gray-900 mb-2">
                             Divisi <span class="text-red-500">*</span>
                         </label>
@@ -169,6 +169,14 @@
 
                 <!-- SPECIAL FIELDS UNTUK SPLIT TAGIHAN -->
                 <div id="splitFields" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-900 mb-2">Mode Pembagian</label>
+                        <select name="split_mode" id="split_mode" onchange="changeSplitMode()"
+                            class="w-full sm:w-56 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="rupiah" {{ old('split_mode', 'rupiah') === 'rupiah' ? 'selected' : '' }}>Rupiah</option>
+                            <option value="persen" {{ old('split_mode') === 'persen' ? 'selected' : '' }}>Persen</option>
+                        </select>
+                    </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-900 mb-2">
@@ -200,7 +208,7 @@
                             <thead class="bg-gray-50 border-b">
                                 <tr>
                                     <th class="px-4 py-3 text-left">Divisi</th>
-                                    <th class="px-4 py-3 text-right">Nominal (Rp)</th>
+                                    <th class="px-4 py-3 text-right" id="splitValueHeader">Nominal (Rp)</th>
                                     <th class="px-4 py-3 text-center w-16">Aksi</th>
                                 </tr>
                             </thead>
@@ -275,12 +283,26 @@
         </x-card>
     </div>
 
+    @php
+        $initialSplitItems = collect(old('split_items', []))->values()->map(function ($item, $index) {
+            return array_merge([
+                'id' => $index + 1,
+                'divisi_id' => '',
+                'nominal' => '',
+                'persentase' => '',
+            ], $item);
+        });
+    @endphp
     <script>
         const divisiData = @json($divisis);
         const originalNomorNota = "{{ $nomorNota }}"; // Tanpa kode prefix
-        let splitItemsData = [];
+        let splitItemsData = {{ Illuminate\Support\Js::from($initialSplitItems) }};
 
         function updateNomorNota() {
+            if (document.getElementById('tipNota').value === 'split') {
+                document.getElementById('nomor_nota_input').value = 'SPL' + originalNomorNota;
+                return;
+            }
             const divisiId = document.getElementById('divisi_id').value;
             const nomorNotaInput = document.getElementById('nomor_nota_input');
 
@@ -363,6 +385,9 @@
             document.getElementById('revenueSharingFields').style.display = tipe === 'revenue_sharing' ? 'block' : 'none';
             document.getElementById('overpaymentFields').style.display = tipe === 'kelebihan_bayar' ? 'block' : 'none';
             document.getElementById('splitFields').style.display = tipe === 'split' ? 'block' : 'none';
+            document.getElementById('divisionField').style.display = tipe === 'split' ? 'none' : 'block';
+            document.getElementById('divisi_id').required = tipe !== 'split';
+            updateNomorNota();
 
             // Clear split items jika switch dari split
             if (tipe !== 'split') {
@@ -376,7 +401,8 @@
             splitItemsData.push({
                 id,
                 divisi_id: '',
-                nominal: ''
+                nominal: '',
+                persentase: ''
             });
             renderSplitItems();
         }
@@ -511,5 +537,116 @@
 
         // Initialize on load
         updateFormFields();
+        renderSplitItems();
+
+        function changeSplitMode() {
+            splitItemsData.forEach(item => {
+                item.nominal = '';
+                item.persentase = '';
+            });
+            renderSplitItems();
+        }
+
+        function renderSplitItems() {
+            const mode = document.getElementById('split_mode').value;
+            const tbody = document.getElementById('splitItemsBody');
+            document.getElementById('splitValueHeader').textContent = mode === 'persen' ? 'Persentase (%)' : 'Nominal (Rp)';
+            tbody.innerHTML = '';
+
+            splitItemsData.forEach((item, index) => {
+                const value = mode === 'persen' ? item.persentase : item.nominal;
+                const selectedIds = splitItemsData.filter(other => other.id !== item.id).map(other => String(other.divisi_id));
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-2 sm:px-4 py-3">
+                        <select class="w-full px-2 py-2 border border-gray-300 rounded text-sm" onchange="updateSplitItem(${item.id}, 'divisi_id', this.value)">
+                            <option value="">-- Pilih Divisi --</option>
+                            ${divisiData.map(d => `<option value="${d.id}" ${item.divisi_id == d.id ? 'selected' : ''} ${selectedIds.includes(String(d.id)) ? 'disabled' : ''}>${d.nama}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="px-2 sm:px-4 py-3">
+                        <input type="text" inputmode="decimal" class="w-full px-2 py-2 border border-gray-300 rounded text-sm text-right"
+                            value="${mode === 'persen' ? (value || '') : (value ? new Intl.NumberFormat('id-ID').format(value) : '')}"
+                            oninput="updateSplitValue(${item.id}, this)" placeholder="0">
+                    </td>
+                    <td class="px-2 sm:px-4 py-3 text-center">
+                        <button type="button" onclick="removeSplitItem(${item.id})" class="text-red-500 text-lg" title="Hapus">&times;</button>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+            updateSplitItemCount();
+            calculateSplitTotal();
+        }
+
+        function updateSplitValue(id, input) {
+            const mode = document.getElementById('split_mode').value;
+            if (mode === 'persen') {
+                const value = input.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                input.value = value;
+                updateSplitItemData(id, 'persentase', value);
+            } else {
+                const value = input.value.replace(/\D/g, '');
+                updateSplitItemData(id, 'nominal', value);
+                formatCurrencyEl(input);
+            }
+        }
+
+        function calculateSplitTotal() {
+            const mode = document.getElementById('split_mode').value;
+            const total = splitItemsData.reduce((sum, item) => sum + (mode === 'persen' ? (parseFloat(item.persentase) || 0) : (parseInt(item.nominal) || 0)), 0);
+            const target = parseInt(document.getElementById('nominal_total').value) || 0;
+            const validation = document.getElementById('splitValidation');
+            document.getElementById('splitTotalPreview').textContent = mode === 'persen' ? total.toLocaleString('id-ID') + '%' : 'Rp ' + total.toLocaleString('id-ID');
+
+            if (splitItemsData.length < 2) {
+                validation.textContent = 'Minimal 2 divisi untuk split tagihan';
+                validation.className = 'text-yellow-600';
+                return;
+            }
+            if (!target) {
+                validation.textContent = 'Isi nominal total terlebih dahulu';
+                validation.className = 'text-yellow-600';
+                return;
+            }
+            const difference = (mode === 'persen' ? 100 : target) - total;
+            if (Math.abs(difference) > 0.001) {
+                const prefix = difference > 0 ? 'Sisa' : 'Kelebihan';
+                validation.textContent = mode === 'persen'
+                    ? `${prefix} ${Math.abs(difference).toLocaleString('id-ID')}%`
+                    : `${prefix} Rp ${Math.abs(difference).toLocaleString('id-ID')}`;
+                validation.className = 'text-red-600';
+                return;
+            }
+            validation.textContent = 'Valid - siap disimpan';
+            validation.className = 'text-green-600';
+        }
+
+        function finalizeSplitItems(event) {
+            if (document.getElementById('tipNota').value !== 'split') return true;
+            const mode = document.getElementById('split_mode').value;
+            const target = parseInt(document.getElementById('nominal_total').value) || 0;
+            const total = splitItemsData.reduce((sum, item) => sum + (mode === 'persen' ? (parseFloat(item.persentase) || 0) : (parseInt(item.nominal) || 0)), 0);
+            const ids = splitItemsData.map(item => String(item.divisi_id)).filter(Boolean);
+            const valid = splitItemsData.length >= 2 && splitItemsData.length <= 20 && ids.length === splitItemsData.length && new Set(ids).size === ids.length && target > 0 && Math.abs(total - (mode === 'persen' ? 100 : target)) <= 0.001;
+            if (!valid) {
+                event.preventDefault();
+                alert('Periksa divisi dan pembagian. Total harus tepat ' + (mode === 'persen' ? '100%.' : 'sama dengan nominal total.'));
+                return false;
+            }
+
+            document.querySelectorAll('input[data-split-hidden]').forEach(input => input.remove());
+            const form = event.target;
+            splitItemsData.forEach((item, index) => {
+                ['divisi_id', 'nominal', 'persentase'].forEach(field => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.dataset.splitHidden = '1';
+                    input.name = `split_items[${index}][${field}]`;
+                    input.value = item[field] || '';
+                    form.appendChild(input);
+                });
+            });
+            return true;
+        }
     </script>
 @endsection

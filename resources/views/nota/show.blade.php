@@ -24,7 +24,7 @@
                         $waMessage = "Nota: " . ($nota->nomor_nota ?? '(Digital)') . "\n" .
                             "Lokasi: " . ($nota->divisi->nama ?? '-') . "\n" .
                             "Keterangan: " . $nota->keterangan . "\n" .
-                            "Lihat Detail: " . route('nota.public_view', ['nomor_nota' => $nota->nomor_nota]);
+                            "Lihat Detail: " . route('nota.public_view', ['token' => $nota->public_token]);
                     @endphp
 
                     <button type="button" onclick="copyPublicLink()"
@@ -45,10 +45,10 @@
             <div class="space-y-4">
                 <x-card title="Aksi" class="sticky top-24">
                     <div class="space-y-2">
-                        @if ($nota->status === 'rejected' && auth()->user()->can('update', $nota))
+                        @if (auth()->user()->can('update', $nota))
                             <a href="{{ route('nota.edit', $nota) }}"
                                 class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors block text-center shadow-sm">
-                                ✏️ Edit & Resubmit
+                                {{ $nota->status === 'rejected' ? 'Edit & Resubmit' : 'Edit Nota' }}
                             </a>
                         @endif
 

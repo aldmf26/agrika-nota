@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Nota;
+use App\Models\User;
 
 class NotaPolicy
 {
@@ -46,10 +46,7 @@ class NotaPolicy
      */
     public function update(User $user, Nota $nota): bool
     {
-        // Hanya bisa edit nota dengan status REJECTED (untuk revisi)
-        // Pending yang baru di-auto-submit TIDAK bisa diedit
-        // Approved = locked, tidak bisa edit
-        if ($nota->status !== 'rejected') {
+        if (! in_array($nota->status, ['pending', 'rejected'], true)) {
             return false;
         }
 
@@ -73,7 +70,7 @@ class NotaPolicy
     {
         // Hanya status pending/rejected yang bisa didelete
         // Approved & void tidak boleh delete
-        if (!in_array($nota->status, ['pending', 'rejected'])) {
+        if (! in_array($nota->status, ['pending', 'rejected'])) {
             return false;
         }
 

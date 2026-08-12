@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Nota;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * Validasi untuk CREATE dan UPDATE nota
@@ -13,7 +16,7 @@ class StoreNotaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', \App\Models\Nota::class);
+        return $this->user()->can('create', Nota::class);
     }
 
     public function rules(): array
@@ -21,7 +24,7 @@ class StoreNotaRequest extends FormRequest
         $rules = [
             'tipe' => ['required', Rule::in(['biasa', 'split', 'revenue_sharing', 'kelebihan_bayar', 'digital'])],
             'tanggal_nota' => ['required', 'date', 'before_or_equal:today'],
-            'divisi_id' => ['required', 'exists:divisis,id'],
+            'divisi_id' => [Rule::requiredIf($this->input('tipe') !== 'split'), 'nullable', 'exists:divisis,id'],
             'nomor_nota' => ['nullable'],
             'keterangan' => ['required', 'string', 'min:5', 'max:500'],
             'attachments' => ['nullable', 'array', 'max:20'],
@@ -34,9 +37,16 @@ class StoreNotaRequest extends FormRequest
         // Validasi khusus per tipe nota
         if ($this->input('tipe') === 'split') {
             $rules['nominal_total'] = ['required', 'integer', 'min:2000'];
+            $rules['split_mode'] = ['required', Rule::in(['rupiah', 'persen'])];
             $rules['split_items'] = ['required', 'array', 'min:2', 'max:20'];
-            $rules['split_items.*.divisi_id'] = ['required', 'integer', 'exists:divisis,id'];
-            $rules['split_items.*.nominal'] = ['required', 'integer', 'min:1000'];
+            $rules['split_items.*.divisi_id'] = ['required', 'integer', 'distinct', 'exists:divisis,id'];
+            if ($this->input('split_mode') === 'persen') {
+                $rules['split_items.*.persentase'] = ['required', 'numeric', 'gt:0', 'max:100'];
+                $rules['split_items.*.nominal'] = ['nullable'];
+            } else {
+                $rules['split_items.*.nominal'] = ['required', 'integer', 'min:1000'];
+                $rules['split_items.*.persentase'] = ['nullable'];
+            }
         } else {
             // Untuk non-split, split_items harus kosong atau tidak ada
             $rules['split_items'] = ['nullable', 'array', 'max:0'];
@@ -78,12 +88,16 @@ class StoreNotaRequest extends FormRequest
             'split_items.*.divisi_id.required' => 'Divisi harus dipilih untuk setiap item',
             'split_items.*.divisi_id.integer' => 'ID divisi tidak valid',
             'split_items.*.divisi_id.exists' => 'Divisi yang dipilih tidak ditemukan',
+            'split_items.*.divisi_id.distinct' => 'Setiap divisi hanya boleh dipilih satu kali',
             'split_items.*.nominal.required' => 'Nominal harus diisi untuk setiap divisi',
             'split_items.*.nominal.integer' => 'Nominal harus berupa angka',
             'split_items.*.nominal.min' => 'Nominal minimal Rp 1.000 untuk setiap divisi',
             'nominal_total.required' => 'Nominal total harus diisi untuk split tagihan',
             'nominal_total.integer' => 'Nominal total harus berupa angka',
             'nominal_total.min' => 'Nominal total minimal Rp 2.000',
+            'split_mode.required' => 'Mode pembagian harus dipilih',
+            'split_items.*.persentase.required' => 'Persentase harus diisi untuk setiap divisi',
+            'split_items.*.persentase.gt' => 'Persentase setiap divisi harus lebih dari 0%',
             'base_amount.required' => 'Base amount harus diisi',
             'persentase.required' => 'Persentase harus diisi',
             'persentase.max' => 'Persentase maksimal 100%',
@@ -92,13 +106,35 @@ class StoreNotaRequest extends FormRequest
         ];
     }
 
+    public function after(): array
+    {
+        return [function (Validator $validator) {
+            if ($this->input('tipe') !== 'split' || $validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $items = collect($this->input('split_items', []));
+            if ($this->input('split_mode') === 'persen') {
+                $total = (float) $items->sum(fn ($item) => $item['persentase'] ?? 0);
+                if (abs($total - 100) > 0.001) {
+                    $validator->errors()->add('split_items', 'Total persentase harus tepat 100%.');
+                }
+            } else {
+                $total = (int) $items->sum(fn ($item) => $item['nominal'] ?? 0);
+                if ($total !== (int) $this->input('nominal_total')) {
+                    $validator->errors()->add('split_items', 'Jumlah pembagian rupiah harus sama dengan nominal total.');
+                }
+            }
+        }];
+    }
+
     /**
      * Get bulan & tahun dari tanggal_nota
      * Cast nominal dan split_items ke integer
      */
     protected function prepareForValidation(): void
     {
-        $date = \Carbon\Carbon::parse($this->tanggal_nota);
+        $date = Carbon::parse($this->tanggal_nota);
 
         $data = [
             'bulan' => $date->month,
@@ -128,6 +164,9 @@ class StoreNotaRequest extends FormRequest
             foreach ($splitItems as $key => $item) {
                 if (isset($item['nominal'])) {
                     $splitItems[$key]['nominal'] = (int) $item['nominal'];
+                }
+                if (isset($item['persentase'])) {
+                    $splitItems[$key]['persentase'] = (float) $item['persentase'];
                 }
             }
             $data['split_items'] = $splitItems;

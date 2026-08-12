@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Nota extends Model
 {
@@ -39,6 +39,26 @@ class Nota extends Model
         'printed_by',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Nota $nota) {
+            if ($nota->public_token) {
+                return;
+            }
+
+            do {
+                $token = Str::random(12);
+            } while (static::withTrashed()->where('public_token', $token)->exists());
+
+            $nota->public_token = $token;
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'public_token';
+    }
+
     protected $casts = [
         'tanggal_nota' => 'date',
         'approved_at' => 'datetime',
@@ -57,7 +77,6 @@ class Nota extends Model
     /**
      * RELATIONSHIPS
      */
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -96,7 +115,6 @@ class Nota extends Model
     /**
      * SCOPES
      */
-
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -141,6 +159,7 @@ class Nota extends Model
         if ($this->tipe === 'split') {
             return $this->items->sum('nominal');
         }
+
         return $this->nominal;
     }
 
@@ -202,7 +221,7 @@ class Nota extends Model
     public function nominalFormatted(): Attribute
     {
         return Attribute::make(
-            get: fn() => 'Rp ' . number_format($this->getNominalTotal(), 0, ',', '.')
+            get: fn () => 'Rp '.number_format($this->getNominalTotal(), 0, ',', '.')
         );
     }
 

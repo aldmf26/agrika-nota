@@ -32,7 +32,7 @@
                 </div>
 
                 <!-- COMMON FIELDS -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-900 mb-2">
                             Tanggal <span class="text-red-500">*</span>
@@ -57,8 +57,41 @@
                         @enderror
                     </div>
                 </div>
+                @if ($nota->tipe === 'split')
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">Nominal Total (Rp)</label>
+                                <input type="number" name="nominal_total" id="nominal_total" min="2000"
+                                    value="{{ old('nominal_total', $nota->nominal) }}"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg" oninput="calculateSplitTotal()" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">Mode Pembagian</label>
+                                <select name="split_mode" id="split_mode" onchange="changeSplitMode()"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="rupiah">Rupiah</option>
+                                    <option value="persen" {{ old('split_mode', $nota->items->contains(fn ($item) => $item->persentase !== null) ? 'persen' : 'rupiah') === 'persen' ? 'selected' : '' }}>Persen</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50"><tr><th class="p-3 text-left">Divisi</th><th class="p-3 text-right" id="splitValueHeader">Nominal (Rp)</th><th class="p-3 w-12">Aksi</th></tr></thead>
+                                <tbody id="splitItemsBody" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                        <button type="button" onclick="addSplitItem()" class="w-full bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg">Tambah Divisi</button>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex justify-between gap-3">
+                            <span id="splitValidation">Periksa pembagian</span>
+                            <strong id="splitTotalPreview">Rp 0</strong>
+                        </div>
+                        @error('split_items')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
+                    </div>
+                @endif
 
-                <div class="grid grid-cols-2 gap-4">
+                @if ($nota->tipe !== 'split')
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-900 mb-2">
                             Divisi <span class="text-red-500">*</span>
@@ -91,6 +124,7 @@
                         @enderror
                     </div>
                 </div>
+                @endif
 
                 <!-- KETERANGAN -->
                 <div>
@@ -158,11 +192,76 @@
         </x-card>
     </div>
 
+    @if ($nota->tipe === 'split')
+    @php
+        $existingSplitItems = $nota->items->map(function ($item) {
+            return [
+                'divisi_id' => $item->divisi_id,
+                'nominal' => $item->nominal,
+                'persentase' => $item->persentase,
+            ];
+        });
+        $initialSplitItems = collect(old('split_items', $existingSplitItems))->values()->map(function ($item, $index) {
+            return array_merge([
+                'id' => $index + 1,
+                'nominal' => '',
+                'persentase' => '',
+            ], $item);
+        });
+    @endphp
     <script>
-        // Placeholder JavaScript untuk compatibility dengan form fields (simplified version)
+        const divisiData = @json($divisis);
+        let splitItemsData = {{ Illuminate\Support\Js::from($initialSplitItems) }};
+
+        function addSplitItem() {
+            if (splitItemsData.length >= 20) return;
+            splitItemsData.push({id: Date.now(), divisi_id: '', nominal: '', persentase: ''});
+            renderSplitItems();
+        }
+        function removeSplitItem(id) { splitItemsData = splitItemsData.filter(item => item.id !== id); renderSplitItems(); }
+        function updateSplitItem(id, field, value) { const item = splitItemsData.find(item => item.id === id); if (item) item[field] = value; field === 'divisi_id' ? renderSplitItems() : calculateSplitTotal(); }
+        function changeSplitMode() { splitItemsData.forEach(item => { item.nominal = ''; item.persentase = ''; }); renderSplitItems(); }
+        function updateSplitValue(id, input) {
+            const mode = document.getElementById('split_mode').value;
+            if (mode === 'persen') {
+                const value = input.value.replace(/[^0-9.,]/g, '').replace(',', '.'); input.value = value; updateSplitItem(id, 'persentase', value);
+            } else {
+                const value = input.value.replace(/\D/g, ''); input.value = value ? new Intl.NumberFormat('id-ID').format(value) : ''; updateSplitItem(id, 'nominal', value);
+            }
+        }
+        function renderSplitItems() {
+            const mode = document.getElementById('split_mode').value;
+            document.getElementById('splitValueHeader').textContent = mode === 'persen' ? 'Persentase (%)' : 'Nominal (Rp)';
+            const body = document.getElementById('splitItemsBody'); body.innerHTML = '';
+            splitItemsData.forEach(item => {
+                const selected = splitItemsData.filter(other => other.id !== item.id).map(other => String(other.divisi_id));
+                const value = mode === 'persen' ? item.persentase : item.nominal;
+                const row = document.createElement('tr');
+                row.innerHTML = `<td class="p-2"><select class="w-full p-2 border rounded" onchange="updateSplitItem(${item.id}, 'divisi_id', this.value)"><option value="">Pilih Divisi</option>${divisiData.map(d => `<option value="${d.id}" ${item.divisi_id == d.id ? 'selected' : ''} ${selected.includes(String(d.id)) ? 'disabled' : ''}>${d.nama}</option>`).join('')}</select></td><td class="p-2"><input inputmode="decimal" class="w-full p-2 border rounded text-right" value="${mode === 'persen' ? (value || '') : (value ? new Intl.NumberFormat('id-ID').format(value) : '')}" oninput="updateSplitValue(${item.id}, this)"></td><td class="p-2 text-center"><button type="button" onclick="removeSplitItem(${item.id})" class="text-red-500 text-lg">&times;</button></td>`;
+                body.appendChild(row);
+            }); calculateSplitTotal();
+        }
+        function calculateSplitTotal() {
+            const mode = document.getElementById('split_mode').value;
+            const total = splitItemsData.reduce((sum, item) => sum + (mode === 'persen' ? (parseFloat(item.persentase) || 0) : (parseInt(item.nominal) || 0)), 0);
+            const target = parseInt(document.getElementById('nominal_total').value) || 0;
+            document.getElementById('splitTotalPreview').textContent = mode === 'persen' ? total.toLocaleString('id-ID') + '%' : 'Rp ' + total.toLocaleString('id-ID');
+            const difference = (mode === 'persen' ? 100 : target) - total;
+            const status = document.getElementById('splitValidation');
+            status.textContent = splitItemsData.length < 2 ? 'Minimal 2 divisi' : Math.abs(difference) <= .001 ? 'Valid - siap disimpan' : `${difference > 0 ? 'Sisa' : 'Kelebihan'} ${mode === 'persen' ? Math.abs(difference).toLocaleString('id-ID') + '%' : 'Rp ' + Math.abs(difference).toLocaleString('id-ID')}`;
+            status.className = Math.abs(difference) <= .001 && splitItemsData.length >= 2 ? 'text-green-700' : 'text-red-600';
+        }
         function finalizeSplitItems(event) {
-            // For now, just allow form submission
+            const mode = document.getElementById('split_mode').value, target = parseInt(document.getElementById('nominal_total').value) || 0;
+            const total = splitItemsData.reduce((sum, item) => sum + (mode === 'persen' ? (parseFloat(item.persentase) || 0) : (parseInt(item.nominal) || 0)), 0);
+            const ids = splitItemsData.map(item => String(item.divisi_id)).filter(Boolean);
+            if (splitItemsData.length < 2 || ids.length !== splitItemsData.length || new Set(ids).size !== ids.length || Math.abs(total - (mode === 'persen' ? 100 : target)) > .001) { event.preventDefault(); alert('Periksa divisi dan total pembagian.'); return false; }
+            splitItemsData.forEach((item, index) => ['divisi_id','nominal','persentase'].forEach(field => { const input = document.createElement('input'); input.type='hidden'; input.name=`split_items[${index}][${field}]`; input.value=item[field] || ''; event.target.appendChild(input); }));
             return true;
         }
+        renderSplitItems();
     </script>
+    @else
+    <script>function finalizeSplitItems() { return true; }</script>
+    @endif
 @endsection

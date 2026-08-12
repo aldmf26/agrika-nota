@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Nota;
-use App\Models\Divisi;
-use App\Http\Requests\StoreNotaRequest;
 use App\Http\Requests\ApproveNotaRequest;
 use App\Http\Requests\RejectNotaRequest;
-use App\Services\NotaCalculationService;
-use App\Services\NotaApprovalService;
+use App\Http\Requests\StoreNotaRequest;
+use App\Models\Divisi;
+use App\Models\Nota;
+use App\Notifications\NotaRejectedNotification;
 use App\Services\AttachmentService;
+use App\Services\NotaApprovalService;
+use App\Services\NotaCalculationService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
  * NotaController - Kelola nota (input, lihat, approve)
- * 
+ *
  * Prinsip:
  * - Setiap method fokus pada 1 tugas
  * - Delegasi logic kompleks ke services
@@ -30,7 +32,7 @@ class NotaController extends Controller
 
     /**
      * INDEX - Lihat history nota
-     * 
+     *
      * Query: filter by status, divisi, tipe, bulan
      * Untuk admin: hanya nota milik sendiri
      * Untuk approver: lihat semua nota
@@ -58,18 +60,20 @@ class NotaController extends Controller
 
         // Filter by divisi
         if (request('divisi_id')) {
-            $query->where('divisi_id', request('divisi_id'))
-                ->orWhereHas('items', fn($q) => $q->where('divisi_id', request('divisi_id')));
+            $query->where(function ($q) {
+                $q->where('divisi_id', request('divisi_id'))
+                    ->orWhereHas('items', fn ($itemQuery) => $itemQuery->where('divisi_id', request('divisi_id')));
+            });
         }
 
         // Filter by tanggal, bulan, tahun, atau custom range
         $filterType = request('filter_type', 'all');
-        
+
         if ($filterType === 'date' && request('tanggal')) {
             $query->whereDate('tanggal_nota', request('tanggal'));
         } elseif ($filterType === 'month' && request('bulan') && request('tahun')) {
             $query->where('bulan', request('bulan'))
-                  ->where('tahun', request('tahun'));
+                ->where('tahun', request('tahun'));
         } elseif ($filterType === 'year' && request('tahun')) {
             $query->where('tahun', request('tahun'));
         } elseif ($filterType === 'custom' && request('start_date') && request('end_date')) {
@@ -121,46 +125,47 @@ class NotaController extends Controller
     public function store(StoreNotaRequest $request)
     {
         $validated = $request->validated();
-
-        // Hitung nominal berdasarkan tipe
-        $nominal = $this->calculateNominalByType($validated);
-
-        // Create nota
-        $nota = Nota::create([
-            'user_id' => auth()->id(),
-            'tipe' => $validated['tipe'],
-            'status' => 'pending', // Auto-submit langsung ke pending (approver review)
-            'tanggal_nota' => $validated['tanggal_nota'],
-            'tahun' => $validated['tahun'],
-            'bulan' => $validated['bulan'],
-            'divisi_id' => $validated['divisi_id'],
-            'nomor_nota' => $validated['nomor_nota'] ?? null,
-            'keterangan' => $validated['keterangan'],
-            'nominal' => $nominal,
-            'base_amount' => $validated['base_amount'] ?? null,
-            'persentase' => $validated['persentase'] ?? null,
-            'nominal_seharusnya' => $validated['nominal_seharusnya'] ?? null,
-            'nominal_dibayar' => $validated['nominal_dibayar'] ?? null,
-            'selisih' => $this->calculationService->calculateOverpayment(
-                $validated['nominal_seharusnya'] ?? 0,
-                $validated['nominal_dibayar'] ?? 0
-            ),
-        ]);
-
-        // Simpan split items jika tipe split
-        if ($nota->tipe === 'split') {
-            foreach ($validated['split_items'] as $item) {
-                $nota->items()->create([
-                    'divisi_id' => $item['divisi_id'],
-                    'nominal' => $item['nominal'],
-                ]);
+        $nota = DB::transaction(function () use ($validated) {
+            $nominal = $this->calculateNominalByType($validated);
+            $splitItems = $validated['tipe'] === 'split'
+                ? $this->calculationService->allocateSplitItems($validated['split_items'], $nominal, $validated['split_mode'])
+                : [];
+            $nomorNota = $validated['nomor_nota'] ?? null;
+            if ($validated['tipe'] === 'split') {
+                $nomorNota = 'SPL'.preg_replace('/\D/', '', (string) $nomorNota);
             }
-        }
 
-        // Upload files yang attached
-        if ($validated['attachments'] ?? false) {
-            $this->attachmentService->uploadAttachments($nota, $validated['attachments']);
-        }
+            $nota = Nota::create([
+                'user_id' => auth()->id(),
+                'tipe' => $validated['tipe'],
+                'status' => 'pending', // Auto-submit langsung ke pending (approver review)
+                'tanggal_nota' => $validated['tanggal_nota'],
+                'tahun' => $validated['tahun'],
+                'bulan' => $validated['bulan'],
+                'divisi_id' => $validated['tipe'] === 'split' ? null : $validated['divisi_id'],
+                'nomor_nota' => $nomorNota,
+                'keterangan' => $validated['keterangan'],
+                'nominal' => $nominal,
+                'base_amount' => $validated['base_amount'] ?? null,
+                'persentase' => $validated['persentase'] ?? null,
+                'nominal_seharusnya' => $validated['nominal_seharusnya'] ?? null,
+                'nominal_dibayar' => $validated['nominal_dibayar'] ?? null,
+                'selisih' => $this->calculationService->calculateOverpayment(
+                    $validated['nominal_seharusnya'] ?? 0,
+                    $validated['nominal_dibayar'] ?? 0
+                ),
+            ]);
+
+            foreach ($splitItems as $item) {
+                $nota->items()->create($item);
+            }
+
+            if ($validated['attachments'] ?? false) {
+                $this->attachmentService->uploadAttachments($nota, $validated['attachments']);
+            }
+
+            return $nota;
+        });
 
         return redirect()
             ->route('nota.show', $nota)
@@ -183,7 +188,7 @@ class NotaController extends Controller
 
     /**
      * SUBMIT - Submit nota dari draft menjadi pending
-     * 
+     *
      * Method ini sederhana: cek validasi minimal, ubah status jadi pending
      */
     public function submit(Nota $nota)
@@ -239,7 +244,7 @@ class NotaController extends Controller
         );
 
         // Send notification ke user
-        $nota->user->notify(new \App\Notifications\NotaRejectedNotification($nota));
+        $nota->user->notify(new NotaRejectedNotification($nota));
 
         return redirect()
             ->route('nota.show', $nota)
@@ -268,7 +273,7 @@ class NotaController extends Controller
         Gate::authorize('delete', $nota);
 
         // Arsip data sebelum dihapus permanen
-        \Illuminate\Support\Facades\DB::table('nota_archives')->insert([
+        DB::table('nota_archives')->insert([
             'original_id' => $nota->id,
             'nomor_nota' => $nota->nomor_nota,
             'user_id' => $nota->user_id,
@@ -302,11 +307,11 @@ class NotaController extends Controller
         $nota->update([
             'is_printed' => true,
             'printed_at' => now(),
-            'printed_by' => auth()->id()
+            'printed_by' => auth()->id(),
         ]);
 
         $nota->load(['user', 'divisi', 'approver', 'items.divisi']);
-        
+
         return view('nota.print', compact('nota'));
     }
 
@@ -347,55 +352,52 @@ class NotaController extends Controller
         Gate::authorize('update', $nota);
 
         $validated = $request->validated();
-        $nominal = $this->calculateNominalByType($validated);
+        $nota = DB::transaction(function () use ($validated, $nota) {
+            $nota = Nota::query()->lockForUpdate()->findOrFail($nota->id);
+            Gate::authorize('update', $nota);
+            $nominal = $this->calculateNominalByType($validated);
+            $splitItems = $validated['tipe'] === 'split'
+                ? $this->calculationService->allocateSplitItems($validated['split_items'], $nominal, $validated['split_mode'])
+                : [];
 
-        // Update nota
-        $nota->update([
-            'tipe' => $validated['tipe'],
-            'tanggal_nota' => $validated['tanggal_nota'],
-            'tahun' => $validated['tahun'],
-            'bulan' => $validated['bulan'],
-            'divisi_id' => $validated['divisi_id'],
-            'nomor_nota' => $validated['nomor_nota'] ?? null,
-            'keterangan' => $validated['keterangan'],
-            'nominal' => $nominal,
-            'base_amount' => $validated['base_amount'] ?? null,
-            'persentase' => $validated['persentase'] ?? null,
-            'nominal_seharusnya' => $validated['nominal_seharusnya'] ?? null,
-            'nominal_dibayar' => $validated['nominal_dibayar'] ?? null,
-            'selisih' => $this->calculationService->calculateOverpayment(
-                $validated['nominal_seharusnya'] ?? 0,
-                $validated['nominal_dibayar'] ?? 0
-            ),
-        ]);
+            $nota->update([
+                'tipe' => $validated['tipe'],
+                'tanggal_nota' => $validated['tanggal_nota'],
+                'tahun' => $validated['tahun'],
+                'bulan' => $validated['bulan'],
+                'divisi_id' => $validated['tipe'] === 'split' ? null : $validated['divisi_id'],
+                'nomor_nota' => $validated['nomor_nota'] ?? null,
+                'keterangan' => $validated['keterangan'],
+                'nominal' => $nominal,
+                'base_amount' => $validated['base_amount'] ?? null,
+                'persentase' => $validated['persentase'] ?? null,
+                'nominal_seharusnya' => $validated['nominal_seharusnya'] ?? null,
+                'nominal_dibayar' => $validated['nominal_dibayar'] ?? null,
+                'selisih' => $this->calculationService->calculateOverpayment(
+                    $validated['nominal_seharusnya'] ?? 0,
+                    $validated['nominal_dibayar'] ?? 0
+                ),
+            ]);
 
-        // Update split items jika tipe split
-        if ($nota->tipe === 'split') {
             $nota->items()->delete();
-            foreach ($validated['split_items'] as $item) {
-                $nota->items()->create([
-                    'divisi_id' => $item['divisi_id'],
-                    'nominal' => $item['nominal'],
-                ]);
+            foreach ($splitItems as $item) {
+                $nota->items()->create($item);
             }
-        }
 
-        // Upload new files jika ada
-        if ($validated['attachments'] ?? false) {
-            $this->attachmentService->uploadAttachments($nota, $validated['attachments']);
-        }
+            if ($validated['attachments'] ?? false) {
+                $this->attachmentService->uploadAttachments($nota, $validated['attachments']);
+            }
 
-        // Jika rejected, auto-resubmit (status tetap pending)
-        if ($nota->status === 'rejected') {
-            $nota->update(['status' => 'pending']);
-            return redirect()
-                ->route('nota.show', $nota)
-                ->with('success', 'Nota berhasil diupdate dan di-resubmit ke approver. ✓');
-        }
+            if ($nota->status === 'rejected') {
+                $nota->update(['status' => 'pending']);
+            }
+
+            return $nota;
+        });
 
         return redirect()
             ->route('nota.show', $nota)
-            ->with('error', 'Nota hanya bisa diedit jika status Rejected.');
+            ->with('success', 'Nota berhasil diperbarui dan tetap menunggu keputusan approver.');
     }
 
     /**
@@ -406,7 +408,7 @@ class NotaController extends Controller
         $tipe = $validated['tipe'];
 
         return match ($tipe) {
-            'split' => $this->calculationService->calculateSplitTotal($validated['split_items']),
+            'split' => (int) $validated['nominal_total'],
             'revenue_sharing' => $this->calculationService->calculateRevenueSharing(
                 $validated['base_amount'],
                 $validated['persentase']

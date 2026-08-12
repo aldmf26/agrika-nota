@@ -126,6 +126,11 @@
         </div>
 
         <div style="margin-bottom: 10px; font-weight: bold; text-transform: uppercase;">Detail Transaksi:</div>
+        @if($nota->tipe === 'split')
+            <div style="margin-bottom: 12px; padding: 10px; border: 1px solid #bbb;">
+                <strong>Keterangan:</strong> {{ $nota->keterangan }}
+            </div>
+        @endif
         <table>
             <thead>
                 <tr>
@@ -137,7 +142,7 @@
                 @if($nota->tipe === 'split')
                     @foreach($nota->items as $item)
                         <tr>
-                            <td>Split Tagihan: {{ $item->divisi->nama }}</td>
+                            <td>Split Tagihan: {{ $item->divisi->nama }}{{ $item->persentase !== null ? ' (' . number_format($item->persentase, 2, ',', '.') . '%)' : '' }}</td>
                             <td style="text-align: right;">{{ number_format($item->nominal, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
@@ -149,7 +154,7 @@
                 @endif
                 <tr class="total-row">
                     <td style="text-align: right;">TOTAL AKHIR</td>
-                    <td style="text-align: right;">Rp {{ number_format($nota->getNominalTotal(), 0, ',', '.') }}</td>
+                    <td style="text-align: right;">Rp {{ number_format($nota->nominal, 0, ',', '.') }}</td>
                 </tr>
             </tbody>
         </table>
