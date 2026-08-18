@@ -11,6 +11,7 @@ use App\Notifications\NotaRejectedNotification;
 use App\Services\AttachmentService;
 use App\Services\NotaApprovalService;
 use App\Services\NotaCalculationService;
+use App\Services\NotaQrCodeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -28,6 +29,7 @@ class NotaController extends Controller
         protected NotaCalculationService $calculationService,
         protected NotaApprovalService $approvalService,
         protected AttachmentService $attachmentService,
+        protected NotaQrCodeService $qrCodeService,
     ) {}
 
     /**
@@ -66,7 +68,7 @@ class NotaController extends Controller
         if (request('divisi_id')) {
             $query->where(function ($q) {
                 $q->where('divisi_id', request('divisi_id'))
-                    ->orWhereHas('items', fn ($itemQuery) => $itemQuery->where('divisi_id', request('divisi_id')));
+                    ->orWhereHas('items', fn($itemQuery) => $itemQuery->where('divisi_id', request('divisi_id')));
             });
         }
 
@@ -139,7 +141,7 @@ class NotaController extends Controller
                 : [];
             $nomorNota = $validated['nomor_nota'] ?? null;
             if ($validated['tipe'] === 'split') {
-                $nomorNota = 'SPL'.preg_replace('/\D/', '', (string) $nomorNota);
+                $nomorNota = 'SPL' . preg_replace('/\D/', '', (string) $nomorNota);
             }
 
             $nota = Nota::create([
@@ -307,7 +309,7 @@ class NotaController extends Controller
      */
     public function print(Nota $nota)
     {
-        Gate::authorize('view', $nota);
+        Gate::authorize('print', $nota);
 
         // Update status cetak hanya sekali jika belum pernah, atau boleh update terus terserah
         // Biasanya update siapa yang cetak terakhir
@@ -319,7 +321,18 @@ class NotaController extends Controller
 
         $nota->load(['user', 'divisi', 'approver', 'items.divisi']);
 
-        return view('nota.print', compact('nota'));
+        $creatorQrCode = $this->qrCodeService->dataUri(route('nota.public_view', [
+            'token' => $nota->public_token,
+            'verification' => 'creator',
+        ]));
+        $approvalQrCode = $nota->status === 'approved'
+            ? $this->qrCodeService->dataUri(route('nota.public_view', [
+                'token' => $nota->public_token,
+                'verification' => 'approval',
+            ]))
+            : null;
+
+        return view('nota.print', compact('nota', 'creatorQrCode', 'approvalQrCode'));
     }
 
     /**

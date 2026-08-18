@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
             'nota.approve',
             'nota.reject',
             'nota.void',
+            'nota.print',
             'nota.export',
             'weekly-review.view',
             'weekly-review.close',

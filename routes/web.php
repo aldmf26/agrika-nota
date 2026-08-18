@@ -14,8 +14,9 @@ Route::get('/', function () {
 /**
  * PUBLIC NOTA VIEW - View nota detail without login
  */
-Route::get('/v/{token}', [\App\Http\Controllers\PublicNotaController::class, 'show'])
+Route::get('/v/{token}/{verification?}', [\App\Http\Controllers\PublicNotaController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{12}')
+    ->whereIn('verification', ['creator', 'approval'])
     ->name('nota.public_view');
 
 /**
@@ -124,6 +125,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             
         // Print nota
         Route::get('/{nota}/print', [NotaController::class, 'print'])
+            ->middleware('permission:nota.print')
             ->name('print');
 
         // Edit nota (pending atau rejected)

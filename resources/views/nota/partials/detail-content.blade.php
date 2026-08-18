@@ -26,7 +26,7 @@
                 </div>
                 <div class="flex flex-col gap-1">
                     <dt class="text-gray-600">Keterangan:</dt>
-                    <dd class="font-medium text-gray-900 bg-gray-50 p-2 rounded border">{{ $nota->keterangan }}</dd>
+                    <dd class="whitespace-pre-wrap font-medium text-gray-900 bg-gray-50 p-2 rounded border">{{ $nota->keterangan }}</dd>
                 </div>
             </dl>
         </x-card>

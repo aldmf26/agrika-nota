@@ -105,6 +105,14 @@ class NotaPolicy
     }
 
     /**
+     * Determine whether the user can print the nota.
+     */
+    public function print(User $user, Nota $nota): bool
+    {
+        return $user->hasPermissionTo('nota.print');
+    }
+
+    /**
      * Determine whether the user can export notas.
      */
     public function export(User $user): bool
