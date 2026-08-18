@@ -176,6 +176,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // System operations
             Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemController::class, 'reset'])
                 ->name('system.reset');
+            Route::post('/system/backups/reset', [\App\Http\Controllers\Admin\SystemController::class, 'backup'])
+                ->name('system.backups.create');
+            Route::get('/system/backups/{backup}/download', [\App\Http\Controllers\Admin\SystemController::class, 'download'])
+                ->name('system.backups.download');
             
             // Reports routes
             Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])

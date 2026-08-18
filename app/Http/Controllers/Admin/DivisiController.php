@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Divisi;
+use App\Models\SystemBackup;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,15 @@ class DivisiController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('admin.divisi.index', compact('divisis'));
+        $resetBackup = SystemBackup::where('status', 'ready')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+        $latestBackup = SystemBackup::where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        return view('admin.divisi.index', compact('divisis', 'resetBackup', 'latestBackup'));
     }
 
     public function store(Request $request)

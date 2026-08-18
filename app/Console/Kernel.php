@@ -16,6 +16,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('nota:cleanup-deleted')
             ->daily()
             ->at('02:00');
+
+        $schedule->command('system-backups:prune')->daily()->at('02:30');
     }
 
     /**

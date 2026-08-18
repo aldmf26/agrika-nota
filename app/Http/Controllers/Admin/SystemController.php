@@ -3,43 +3,54 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
+use App\Models\SystemBackup;
+use App\Services\SystemResetService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Gate;
 
 class SystemController extends Controller
 {
-    /**
-     * RESET - Hapus semua data (nota, items, attachments, archives, logs)
-     * 
-     * WARNING: This action is irreversible.
-     */
-    public function reset()
+    public function __construct(private SystemResetService $resetService) {}
+
+    public function backup()
     {
-        dd('Reset sistem ini akan menghapus semua data nota, item, lampiran, arsip, dan log deposit. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin ingin melanjutkan?');
-        // Force check if super_admin role (can already be handled by middleware)
-        if (!auth()->user()->hasRole('super_admin')) {
-            abort(403, 'Akses ditolak. Hanya Super Admin yang bisa reset data.');
+        try {
+            $backup = $this->resetService->createBackup(auth()->user());
+            return back()->with('success', "Backup JSON siap: {$backup->nota_count} nota diamankan.");
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Backup gagal; tidak ada data dihapus: '.$e->getMessage());
         }
+    }
+
+    public function download(SystemBackup $backup)
+    {
+        try {
+            $this->resetService->assertDownloadable($backup);
+            return Storage::disk('local')->download(
+                $backup->path,
+                'agrika-nota-backup-'.$backup->created_at->format('Ymd-His').'.json',
+                ['Content-Type' => 'application/json']
+            );
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function reset(Request $request)
+    {
+        $validated = $request->validate([
+            'backup_id' => ['required', 'integer', 'exists:system_backups,id'],
+            'confirmation' => ['required', 'in:RESET'],
+        ], ['confirmation.in' => 'Ketik RESET dengan huruf kapital.']);
 
         try {
-            // 1. Reset tables (disable FK checks during operation)
-            // Note: TRUNCATE causes an implicit commit in MySQL, and cannot be undone via transactions.
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            DB::table('nota_items')->truncate();
-            DB::table('nota_attachments')->truncate();
-            DB::table('nota_archives')->truncate();
-            DB::table('deposit_logs')->truncate();
-            DB::table('notas')->truncate();
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
-            // 2. Delete media
-            Storage::disk('public')->deleteDirectory('nota');
-
-            return back()->with('success', '♻️ Sistem berhasil di-reset sepenuhnya. Semua data nota dan lampiran telah dihapus.');
-        } catch (\Exception $e) {
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-            return back()->with('error', 'Gagal reset sistem: ' . $e->getMessage());
+            $photosDeleted = $this->resetService->reset(SystemBackup::findOrFail($validated['backup_id']));
+            $message = 'Reset selesai. Backup JSON tetap tersedia selama 30 hari.';
+            return back()->with($photosDeleted ? 'success' : 'warning', $photosDeleted ? $message : $message.' Folder foto gagal dibersihkan.');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Reset dibatalkan: '.$e->getMessage());
         }
     }
 }
