@@ -18,6 +18,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'all_divisi',
     ];
 
     protected $hidden = [
@@ -35,6 +36,50 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'all_divisi' => 'boolean',
         ];
+    }
+
+    public function divisis()
+    {
+        return $this->belongsToMany(Divisi::class, 'divisi_user', 'user_id', 'divisi_id');
+    }
+
+    /**
+     * Dapatkan daftar divisi yang dapat diakses oleh user ini.
+     */
+    public function accessibleDivisis()
+    {
+        if ($this->hasRole('super_admin') || $this->hasRole('approver') || $this->all_divisi || $this->all_divisi === null) {
+            return Divisi::aktif()->get();
+        }
+
+        $assigned = $this->divisis()->where('aktif', true)->get();
+
+        if ($assigned->isEmpty()) {
+            return Divisi::aktif()->get();
+        }
+
+        return $assigned;
+    }
+
+    /**
+     * Cek apakah user berhak mengakses divisi tertentu.
+     */
+    public function canAccessDivisi($divisiId): bool
+    {
+        if (! $divisiId) {
+            return true;
+        }
+
+        if ($this->hasRole('super_admin') || $this->hasRole('approver') || $this->all_divisi || $this->all_divisi === null) {
+            return true;
+        }
+
+        if ($this->divisis()->count() === 0) {
+            return true;
+        }
+
+        return $this->divisis()->where('divisis.id', $divisiId)->exists();
     }
 }

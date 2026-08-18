@@ -120,55 +120,6 @@
             })();
         </script>
 
-        <!-- Danger Zone -->
-        <div class="mt-12 bg-white rounded-3xl border-2 border-rose-100 p-8 shadow-xl shadow-rose-50">
-            <div class="flex items-center gap-6">
-                <div class="bg-rose-50 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl">☢️</div>
-                <div>
-                    <h3 class="text-rose-900 font-black text-xl tracking-tight">RESET DATA AMAN</h3>
-                    <p class="text-rose-600/70 font-medium text-sm">Backup JSON wajib siap sebelum data dan foto dihapus.</p>
-                </div>
-            </div>
-            {{-- Legacy direct reset disabled.
-            <form action="{{ route('admin.system.reset') }}" method="POST" 
-                onsubmit="return confirm('⚠️ KONFIRMASI RESET TOTAL!\n\nSemua nota, gambar lampiran, dan arsip akan dihapus permanen.\n\nLanjutkan?')">
-                @csrf
-                <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-rose-200 transition-all hover:scale-105 active:scale-95 leading-none uppercase tracking-wider text-xs">
-                    Reset Semua Data
-                </button>
-            </form>
-            --}}
-
-            <div class="mt-5">
-                @if($resetBackup)
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                        <p class="font-black text-emerald-800">Backup siap — {{ $resetBackup->nota_count }} nota</p>
-                        <p class="text-xs text-emerald-700 mt-1">{{ number_format($resetBackup->file_size / 1024, 1, ',', '.') }} KB · berlaku sampai {{ $resetBackup->expires_at->format('d/m/Y H:i') }}</p>
-                        <a href="{{ route('admin.system.backups.download', $resetBackup) }}" class="inline-block mt-2 text-sm font-bold text-emerald-800 underline">Unduh Backup JSON</a>
-                    </div>
-                    <form action="{{ route('admin.system.reset') }}" method="POST" class="mt-4" onsubmit="return confirm('Backup siap. Hapus data operasional dan foto sekarang?')">
-                        @csrf
-                        <input type="hidden" name="backup_id" value="{{ $resetBackup->id }}">
-                        <div class="flex gap-3">
-                            <input name="confirmation" required autocomplete="off" placeholder="Ketik RESET" class="rounded-xl border border-rose-200 px-4 py-3 font-bold">
-                            <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-xl font-black uppercase tracking-wider text-xs">Reset Semua Data</button>
-                        </div>
-                        @error('confirmation')<p class="text-xs text-rose-600 mt-2">{{ $message }}</p>@enderror
-                    </form>
-                @else
-                    @if($latestBackup)
-                        <div class="mb-4 rounded-2xl border border-sky-200 bg-sky-50 p-4">
-                            <p class="font-bold text-sky-800">Backup terakhir tetap tersimpan sampai {{ $latestBackup->expires_at->format('d/m/Y H:i') }}</p>
-                            <a href="{{ route('admin.system.backups.download', $latestBackup) }}" class="text-sm font-bold text-sky-800 underline">Unduh Backup JSON</a>
-                        </div>
-                    @endif
-                    <form action="{{ route('admin.system.backups.create') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-black uppercase tracking-wider text-xs">Siapkan Backup JSON</button>
-                    </form>
-                @endif
-            </div>
-        </div>
     </div>
 
     <!-- MODAL: CREATE DIVISI (MULTIPLE) -->

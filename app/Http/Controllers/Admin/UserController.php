@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Divisi;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class UserController extends Controller
             : 10;
         $search = trim((string) $request->input('search'));
 
-        $users = User::with('roles')
+        $users = User::with(['roles', 'divisis'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -30,8 +31,9 @@ class UserController extends Controller
             ->paginate($perPage)
             ->withQueryString();
         $roles = Role::all();
+        $divisis = Divisi::orderBy('nama')->get();
 
-        return view('admin.user.index', compact('users', 'roles'));
+        return view('admin.user.index', compact('users', 'roles', 'divisis'));
     }
 
     public function store(Request $request)
@@ -41,6 +43,9 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|exists:roles,name',
+            'all_divisi' => 'nullable|boolean',
+            'divisi_ids' => 'nullable|array',
+            'divisi_ids.*' => 'exists:divisis,id',
         ]);
 
         try {
@@ -48,12 +53,19 @@ class UserController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
+                'all_divisi' => $request->has('all_divisi'),
             ]);
         } catch (UniqueConstraintViolationException) {
             return back()->withInput()->with('error', 'Email sudah digunakan oleh user lain.');
         }
 
         $user->assignRole($validated['role']);
+        
+        if (! $user->all_divisi && $request->has('divisi_ids')) {
+            $user->divisis()->sync($request->input('divisi_ids'));
+        } else {
+            $user->divisis()->detach();
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dibuat.');
     }
@@ -65,12 +77,16 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8',
             'role' => 'required|exists:roles,name',
+            'all_divisi' => 'nullable|boolean',
+            'divisi_ids' => 'nullable|array',
+            'divisi_ids.*' => 'exists:divisis,id',
         ]);
 
         try {
             $user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
+                'all_divisi' => $request->has('all_divisi'),
             ]);
 
             if (! empty($validated['password'])) {
@@ -81,6 +97,12 @@ class UserController extends Controller
         }
 
         $user->syncRoles($validated['role']);
+
+        if (! $user->all_divisi && $request->has('divisi_ids')) {
+            $user->divisis()->sync($request->input('divisi_ids'));
+        } else {
+            $user->divisis()->detach();
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
     }
@@ -96,3 +118,4 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
     }
 }
+

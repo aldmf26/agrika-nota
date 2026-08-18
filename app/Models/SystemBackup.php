@@ -22,4 +22,12 @@ class SystemBackup extends Model
     {
         return 'token';
     }
+
+    public static function getValidResetBackup(): ?static
+    {
+        return static::where('status', 'ready')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+    }
 }

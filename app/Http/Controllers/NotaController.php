@@ -103,7 +103,7 @@ class NotaController extends Controller
         $notas = $query->paginate($perPage)->withQueryString();
 
         // Data untuk filter dropdown
-        $divisis = Divisi::aktif()->get(['id', 'nama']);
+        $divisis = auth()->user()->accessibleDivisis();
         $statuses = ['draft', 'pending', 'approved', 'rejected', 'void'];
         $tipes = ['biasa', 'split', 'revenue_sharing', 'kelebihan_bayar', 'digital'];
 
@@ -117,7 +117,7 @@ class NotaController extends Controller
     {
         Gate::authorize('create', Nota::class);
 
-        $divisis = Divisi::aktif()->get(['id', 'nama', 'kode']);
+        $divisis = auth()->user()->accessibleDivisis();
 
         // Generate auto nomor nota (hanya hitung yang tidak terhapus agar bisa reuse jika yang terakhir dihapus)
         // Format default: XXXX (akan ditambah kode divisi di JS)
@@ -134,6 +134,19 @@ class NotaController extends Controller
     public function store(StoreNotaRequest $request)
     {
         $validated = $request->validated();
+
+        if ($validated['tipe'] !== 'split' && ! auth()->user()->canAccessDivisi($validated['divisi_id'] ?? null)) {
+            return back()->withInput()->with('error', 'Anda tidak memiliki hak akses ke divisi yang dipilih.');
+        }
+
+        if ($validated['tipe'] === 'split') {
+            foreach ($validated['split_items'] ?? [] as $sItem) {
+                if (! auth()->user()->canAccessDivisi($sItem['divisi_id'] ?? null)) {
+                    return back()->withInput()->with('error', 'Anda tidak memiliki hak akses ke salah satu divisi split.');
+                }
+            }
+        }
+
         $nota = DB::transaction(function () use ($validated) {
             $nominal = $this->calculateNominalByType($validated);
             $splitItems = $validated['tipe'] === 'split'
@@ -311,8 +324,6 @@ class NotaController extends Controller
     {
         Gate::authorize('print', $nota);
 
-        // Update status cetak hanya sekali jika belum pernah, atau boleh update terus terserah
-        // Biasanya update siapa yang cetak terakhir
         $nota->update([
             'is_printed' => true,
             'printed_at' => now(),
@@ -332,7 +343,9 @@ class NotaController extends Controller
             ]))
             : null;
 
-        return view('nota.print', compact('nota', 'creatorQrCode', 'approvalQrCode'));
+        $showQrCode = \App\Models\SystemSetting::isQrEnabled();
+
+        return view('nota.print', compact('nota', 'creatorQrCode', 'approvalQrCode', 'showQrCode'));
     }
 
     /**
@@ -358,7 +371,7 @@ class NotaController extends Controller
     {
         Gate::authorize('update', $nota);
 
-        $divisis = Divisi::aktif()->get(['id', 'nama']);
+        $divisis = auth()->user()->accessibleDivisis();
         $nota->load(['items', 'attachments']);
 
         return view('nota.edit', compact('nota', 'divisis'));
@@ -372,6 +385,18 @@ class NotaController extends Controller
         Gate::authorize('update', $nota);
 
         $validated = $request->validated();
+
+        if ($validated['tipe'] !== 'split' && ! auth()->user()->canAccessDivisi($validated['divisi_id'] ?? null)) {
+            return back()->withInput()->with('error', 'Anda tidak memiliki hak akses ke divisi yang dipilih.');
+        }
+
+        if ($validated['tipe'] === 'split') {
+            foreach ($validated['split_items'] ?? [] as $sItem) {
+                if (! auth()->user()->canAccessDivisi($sItem['divisi_id'] ?? null)) {
+                    return back()->withInput()->with('error', 'Anda tidak memiliki hak akses ke salah satu divisi split.');
+                }
+            }
+        }
         $nota = DB::transaction(function () use ($validated, $nota) {
             $nota = Nota::query()->lockForUpdate()->findOrFail($nota->id);
             Gate::authorize('update', $nota);

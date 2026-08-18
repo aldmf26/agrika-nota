@@ -30,15 +30,7 @@ class DivisiController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $resetBackup = SystemBackup::where('status', 'ready')
-            ->where('expires_at', '>', now())
-            ->latest()
-            ->first();
-        $latestBackup = SystemBackup::where('expires_at', '>', now())
-            ->latest()
-            ->first();
-
-        return view('admin.divisi.index', compact('divisis', 'resetBackup', 'latestBackup'));
+        return view('admin.divisi.index', compact('divisis'));
     }
 
     public function store(Request $request)

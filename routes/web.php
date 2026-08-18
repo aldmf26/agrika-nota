@@ -173,7 +173,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // User management
             Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
             
-            // System operations
+            // System settings & operations
+            Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])
+                ->name('settings.index');
+            Route::post('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])
+                ->name('settings.update');
+
             Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemController::class, 'reset'])
                 ->name('system.reset');
             Route::post('/system/backups/reset', [\App\Http\Controllers\Admin\SystemController::class, 'backup'])

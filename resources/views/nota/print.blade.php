@@ -308,9 +308,13 @@
                 <div class="footer">
                     <div>
                         <p>Diajukan Oleh,</p>
-                        <div class="qr-box">
-                            <img src="{{ $creatorQrCode }}" alt="QR verifikasi pengaju">
-                        </div>
+                        @if ($showQrCode ?? true)
+                            <div class="qr-box">
+                                <img src="{{ $creatorQrCode }}" alt="QR verifikasi pengaju">
+                            </div>
+                        @else
+                            <div class="signature-box"></div>
+                        @endif
                         <p>({{ $nota->user->name }})</p>
                     </div>
                     <div>
@@ -320,11 +324,15 @@
                     </div>
                     <div>
                         <p>Disetujui Oleh,</p>
-                        <div class="qr-box">
-                            @if ($approvalQrCode)
-                                <img src="{{ $approvalQrCode }}" alt="QR verifikasi persetujuan">
-                            @endif
-                        </div>
+                        @if ($showQrCode ?? true)
+                            <div class="qr-box">
+                                @if ($approvalQrCode)
+                                    <img src="{{ $approvalQrCode }}" alt="QR verifikasi persetujuan">
+                                @endif
+                            </div>
+                        @else
+                            <div class="signature-box"></div>
+                        @endif
                         <p>({{ $nota->approver->name ?? '....................' }})</p>
                     </div>
                 </div>
