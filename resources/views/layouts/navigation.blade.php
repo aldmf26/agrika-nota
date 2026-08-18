@@ -40,7 +40,7 @@
                             <span class="mx-2 h-6 w-px bg-gray-200"></span>
                             <a href="{{ route('admin.divisi.index') }}"
                                 class="px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.divisi.*') || request()->routeIs('admin.system.*') ? 'bg-red-50 font-bold text-red-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                                Divisi
+                                Sistem
                             </a>
                             <a href="{{ route('admin.users.index') }}"
                                 class="px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-indigo-50 font-bold text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
