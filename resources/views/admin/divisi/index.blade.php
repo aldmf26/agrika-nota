@@ -121,7 +121,7 @@
         </script>
 
         <!-- Danger Zone -->
-        <div class="mt-12 bg-white rounded-3xl border-2 border-rose-100 p-8 shadow-xl shadow-rose-50 flex items-center justify-between">
+        {{-- <div class="mt-12 bg-white rounded-3xl border-2 border-rose-100 p-8 shadow-xl shadow-rose-50 flex items-center justify-between">
             <div class="flex items-center gap-6">
                 <div class="bg-rose-50 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl">☢️</div>
                 <div>
@@ -136,7 +136,7 @@
                     Reset Semua Data
                 </button>
             </form>
-        </div>
+        </div> --}}
     </div>
 
     <!-- MODAL: CREATE DIVISI (MULTIPLE) -->

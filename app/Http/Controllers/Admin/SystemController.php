@@ -16,6 +16,7 @@ class SystemController extends Controller
      */
     public function reset()
     {
+        dd('Reset sistem ini akan menghapus semua data nota, item, lampiran, arsip, dan log deposit. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin ingin melanjutkan?');
         // Force check if super_admin role (can already be handled by middleware)
         if (!auth()->user()->hasRole('super_admin')) {
             abort(403, 'Akses ditolak. Hanya Super Admin yang bisa reset data.');
