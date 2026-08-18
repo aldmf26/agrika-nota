@@ -62,14 +62,14 @@
                         @endforeach
                     </select>
 
-                    <select name="divisi_id" class="filter-control cursor-pointer" onchange="this.form.submit()">
-                        <option value="">Semua Divisi</option>
-                        @foreach ($divisis as $d)
-                            <option value="{{ $d->id }}" {{ request('divisi_id') == $d->id ? 'selected' : '' }}>
-                                {{ $d->nama }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-divisi-autocomplete
+                        name="divisi_id"
+                        id="divisi_id_filter"
+                        :divisis="$divisis"
+                        :value="request('divisi_id')"
+                        placeholder="Semua Divisi"
+                        onchange="submitFilterForm"
+                    />
 
                     <label class="filter-control flex items-center justify-between gap-2 whitespace-nowrap">
                         Tampilkan
@@ -304,4 +304,10 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function submitFilterForm() {
+            document.querySelector('form[action="{{ route('nota.index') }}"]').submit();
+        }
+    </script>
 @endsection

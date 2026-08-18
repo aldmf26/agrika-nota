@@ -75,9 +75,15 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <div class="border border-gray-200 rounded-lg overflow-visible min-h-[260px] bg-white">
                             <table class="w-full text-sm">
-                                <thead class="bg-gray-50"><tr><th class="p-3 text-left">Divisi</th><th class="p-3 text-right" id="splitValueHeader">Nominal (Rp)</th><th class="p-3 w-12">Aksi</th></tr></thead>
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3 text-left w-1/2">Divisi</th>
+                                        <th class="p-3 text-right w-5/12" id="splitValueHeader">Nominal (Rp)</th>
+                                        <th class="p-3 text-center w-1/12">Aksi</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="splitItemsBody" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -96,17 +102,14 @@
                         <label class="block text-sm font-medium text-gray-900 mb-2">
                             Divisi <span class="text-red-500">*</span>
                         </label>
-                        <select name="divisi_id"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required>
-                            <option value="">-- Pilih Divisi --</option>
-                            @foreach ($divisis as $divisi)
-                                <option value="{{ $divisi->id }}"
-                                    {{ $nota->divisi_id === $divisi->id ? 'selected' : '' }}>
-                                    {{ $divisi->nama }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-divisi-autocomplete
+                            name="divisi_id"
+                            id="divisi_id"
+                            :divisis="$divisis"
+                            :value="old('divisi_id', $nota->divisi_id)"
+                            :required="true"
+                            placeholder="Ketik untuk mencari divisi..."
+                        />
                         @error('divisi_id')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -232,14 +235,61 @@
         function renderSplitItems() {
             const mode = document.getElementById('split_mode').value;
             document.getElementById('splitValueHeader').textContent = mode === 'persen' ? 'Persentase (%)' : 'Nominal (Rp)';
-            const body = document.getElementById('splitItemsBody'); body.innerHTML = '';
+            const body = document.getElementById('splitItemsBody');
+            body.innerHTML = '';
+
+            if (splitItemsData.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="3" class="px-4 py-8 text-center text-gray-500 italic">
+                        Belum ada item divisi. Klik <strong>Tambah Divisi</strong> untuk menambahkan item split.
+                    </td>`;
+                body.appendChild(emptyRow);
+                calculateSplitTotal();
+                return;
+            }
+
             splitItemsData.forEach(item => {
                 const selected = splitItemsData.filter(other => other.id !== item.id).map(other => String(other.divisi_id));
+                const filteredDivisi = divisiData.filter(d => !selected.includes(String(d.id)));
+                const acId = 'split_divisi_' + item.id;
                 const value = mode === 'persen' ? item.persentase : item.nominal;
                 const row = document.createElement('tr');
-                row.innerHTML = `<td class="p-2"><select class="w-full p-2 border rounded" onchange="updateSplitItem(${item.id}, 'divisi_id', this.value)"><option value="">Pilih Divisi</option>${divisiData.map(d => `<option value="${d.id}" ${item.divisi_id == d.id ? 'selected' : ''} ${selected.includes(String(d.id)) ? 'disabled' : ''}>${d.nama}</option>`).join('')}</select></td><td class="p-2"><input inputmode="decimal" class="w-full p-2 border rounded text-right" value="${mode === 'persen' ? (value || '') : (value ? new Intl.NumberFormat('id-ID').format(value) : '')}" oninput="updateSplitValue(${item.id}, this)"></td><td class="p-2 text-center"><button type="button" onclick="removeSplitItem(${item.id})" class="text-red-500 text-lg">&times;</button></td>`;
+                row.className = "hover:bg-gray-50/50 transition-colors";
+                row.innerHTML = `
+                    <td class="p-2 sm:p-3 align-top">
+                        <div class="relative divisi-autocomplete-wrapper" data-input-id="${acId}">
+                            <input type="hidden" name="" data-split-divisi="${item.id}" value="${item.divisi_id || ''}">
+                            <input type="text" id="${acId}"
+                                class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 autocomplete-input text-gray-900"
+                                placeholder="Cari divisi..." autocomplete="off" value="${item.divisi_id ? (divisiData.find(d => String(d.id) === String(item.divisi_id))?.nama || '') : ''}">
+                            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 autocomplete-clear ${item.divisi_id ? '' : 'hidden'}"
+                                onclick="clearSplitAutocomplete(${item.id})" title="Hapus pilihan">&times;</button>
+                            <div id="${acId}_dropdown" class="absolute z-[999] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-56 overflow-y-auto hidden autocomplete-dropdown"></div>
+                        </div>
+                    </td>
+                    <td class="p-2 sm:p-3 align-top">
+                        <input type="text" inputmode="decimal" class="w-full p-2 border border-gray-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                            value="${mode === 'persen' ? (value || '') : (value ? new Intl.NumberFormat('id-ID').format(value) : '')}"
+                            oninput="updateSplitValue(${item.id}, this)" placeholder="${mode === 'persen' ? '0%' : '0'}">
+                    </td>
+                    <td class="p-2 sm:p-3 align-top text-center">
+                        <button type="button" onclick="removeSplitItem(${item.id})" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg text-lg transition-colors" title="Hapus">&times;</button>
+                    </td>`;
                 body.appendChild(row);
-            }); calculateSplitTotal();
+
+                window.initDivisiAutocomplete(acId, filteredDivisi, {
+                    onSelect: function(selected) {
+                        item.divisi_id = selected.id;
+                        renderSplitItems();
+                    }
+                });
+            });
+            calculateSplitTotal();
+        }
+        function clearSplitAutocomplete(itemId) {
+            const item = splitItemsData.find(i => i.id === itemId);
+            if (item) { item.divisi_id = ''; renderSplitItems(); }
         }
         function calculateSplitTotal() {
             const mode = document.getElementById('split_mode').value;
