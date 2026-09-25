@@ -239,7 +239,12 @@
                         <div class="info-item"><label>No.
                                 Nota</label><span>:</span><span>{{ $nota->nomor_nota ?? '-' }}</span></div>
                         <div class="info-item">
-                            <label>Tanggal</label><span>:</span><span>{{ $nota->tanggal_nota->format('d/m/Y') }}</span>
+                            @php
+                                use Carbon\Carbon;
+
+                                Carbon::setLocale('id');
+                            @endphp
+                            <label>Tanggal</label><span>:</span><span>{{ $nota->tanggal_nota->translatedFormat('l, d/m/Y') }}</span>
                         </div>
                         {{-- <div class="info-item">
                             <label>Divisi</label><span>:</span><span>{{ $nota->divisi->nama ?? '-' }}</span></div> --}}
