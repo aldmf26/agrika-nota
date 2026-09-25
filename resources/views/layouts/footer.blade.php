@@ -7,7 +7,7 @@
             </a>
         </div>
         <div class="border-t border-gray-800 pt-6 text-sm text-gray-400">
-            <p>&copy; {{ date('Y') }} Agrika Nota. Semua hak dilindungi.</p>
+            <p>&copy; {{ date('Y') }} Nota Manual. Semua hak dilindungi.</p>
         </div>
     </div>
 </footer>

@@ -7,7 +7,7 @@
             style="max-width: 28rem; width: 100%; background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             <div style="text-align: center; margin-bottom: 2rem;">
                 <h2 style="font-size: 1.875rem; font-weight: 700; color: #1b1b18;">Login</h2>
-                <p style="color: #4b5563; margin-top: 0.5rem;">Agrika Nota - Sistem Pencatatan Manual Nota</p>
+                <p style="color: #4b5563; margin-top: 0.5rem;">Nota Manual - Sistem Pencatatan Manual Nota</p>
             </div>
 
             @if ($errors->any())

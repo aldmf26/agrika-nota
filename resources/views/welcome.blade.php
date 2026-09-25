@@ -8,7 +8,7 @@
             class="grid items-center gap-8 border-b border-slate-200 py-8 lg:grid-cols-[1.05fr_.95fr] lg:py-12">
             <div class="max-w-2xl">
                 <p class="mb-3 text-sm font-bold uppercase text-emerald-700">Sistem pencatatan nota internal</p>
-                <h1 class="text-4xl font-black leading-tight text-slate-950 sm:text-5xl">Agrika Nota</h1>
+                <h1 class="text-4xl font-black leading-tight text-slate-950 sm:text-5xl">Nota Manual</h1>
                 <p class="mt-4 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
                     Pencatatan, persetujuan, dan pemeriksaan nota mingguan dalam satu sistem internal.
                 </p>

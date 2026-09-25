@@ -15,7 +15,7 @@
                     @endauth
                     <a href="{{ auth()->check() ? route('dashboard') : '/' }}"
                         class="shrink-0 text-lg font-bold text-green-600 sm:text-xl">
-                        📝 Agrika Nota
+                        📝 Nota Manual
                     </a>
                 </div>
 

@@ -6,7 +6,7 @@
     <div class="mx-auto max-w-5xl py-4 sm:py-10">
         <header class="mb-7 max-w-2xl">
             <p class="text-sm font-bold uppercase text-emerald-700">Panduan pengguna</p>
-            <h1 class="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">Cara menggunakan Agrika Nota</h1>
+            <h1 class="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">Cara menggunakan Nota Manual</h1>
             <p class="mt-3 text-slate-600">Langkah penting tanpa penjelasan panjang.</p>
         </header>
 

@@ -328,6 +328,7 @@
                     errors.push('Minimal 2 divisi untuk split tagihan');
                 }
 
+                const splitMode = document.getElementById('split_mode').value;
                 splitItemsData.forEach((item, idx) => {
                     if (!item.divisi_id) {
                         errors.push(`Item ${idx + 1}: Pilih divisi terlebih dahulu`);
@@ -340,8 +341,8 @@
                         }
                     }
 
-                    if (!item.nominal || item.nominal === '0') {
-                        errors.push(`Item ${idx + 1}: Isi nominal (minimal Rp 1.000)`);
+                    if (splitMode === 'persen' ? (!item.persentase || Number(item.persentase) <= 0) : (!item.nominal || item.nominal === '0')) {
+                        errors.push(`Item ${idx + 1}: Isi ${splitMode === 'persen' ? 'persentase' : 'nominal'}`);
                     }
                 });
 
@@ -371,6 +372,12 @@
                     nominalInput.name = `split_items[${index}][nominal]`;
                     nominalInput.value = item.nominal;
                     tbody.parentElement.parentElement.appendChild(nominalInput);
+
+                    const persenInput = document.createElement('input');
+                    persenInput.type = 'hidden';
+                    persenInput.name = `split_items[${index}][persentase]`;
+                    persenInput.value = item.persentase || '';
+                    tbody.parentElement.parentElement.appendChild(persenInput);
                 });
             }
 

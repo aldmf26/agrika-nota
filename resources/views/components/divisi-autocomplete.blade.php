@@ -23,7 +23,6 @@
         placeholder="{{ $placeholder }}"
         value="{{ $selectedDivisi ? ($selectedDivisi['nama'] ?? $selectedDivisi->nama) : '' }}"
         autocomplete="off"
-        @if($required) required @endif
         @if($onchange) data-onchange="{{ $onchange }}" @endif
     >
     <button type="button"

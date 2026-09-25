@@ -227,7 +227,7 @@
             <div class="container">
                 <div
                     class="watermark {{ $copy === 2 ? 'watermark-copy' : '' }} {{ $copy === 2 && $nota->tipe === 'split' ? 'watermark-copy-split' : '' }}">
-                    {{ $copy === 1 ? 'AGRIKA NOTA SISTEM' : 'COPY' }}
+                    {{ $copy === 1 ? 'NOTA MANUAL' : 'COPY' }}
                 </div>
                 <div class="header">
                     <h1>{{ $nota->divisi->nama ?? '-' }} NOTA MANUAL</h1>
@@ -257,7 +257,8 @@
                         <div class="info-item"><label>Diajukan
                                 Oleh</label><span>:</span><span>{{ $nota->user->name }}</span></div>
                         <div class="info-item"><label>Dicetak
-                                Pada</label><span>:</span><span>{{ now()->translatedFormat('l, d/m/Y H:i:s') }}</span></div>
+                                Pada</label><span>:</span><span>{{ now()->translatedFormat('l, d/m/Y H:i:s') }}</span>
+                        </div>
                     </div>
                 </div>
 

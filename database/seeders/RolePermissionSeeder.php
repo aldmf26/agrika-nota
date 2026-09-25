@@ -25,6 +25,7 @@ class RolePermissionSeeder extends Seeder
             'nota.view-all',
             'nota.create',
             'nota.edit-own',
+            'nota.print',
             'nota.edit-all',
             'nota.approve',
             'nota.reject',

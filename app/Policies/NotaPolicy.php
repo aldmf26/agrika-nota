@@ -115,7 +115,7 @@ class NotaPolicy
      */
     public function print(User $user, Nota $nota): bool
     {
-        return $user->hasPermissionTo('nota.print');
+        return $user->hasPermissionTo('nota.print') || $user->hasRole('admin');
     }
 
     /**
