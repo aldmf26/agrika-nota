@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Carbon::setLocale('id');
+        \Illuminate\Support\Facades\Blade::directive('indoDateTime', function ($expression) {
+            return "<?php echo {$expression} ? \\Carbon\\Carbon::parse({$expression})->locale('id')->translatedFormat('l, d F Y, H.i') : '-'; ?>";
+        });
+
         Gate::policy(Nota::class, NotaPolicy::class);
 
         RateLimiter::for('login', function (Request $request) {

@@ -65,12 +65,12 @@ class ReportDetailsTest extends TestCase
             ->assertSee('Rp 300.000');
     }
 
-    public function test_non_super_admin_cannot_access_report_details(): void
+    public function test_admin_can_access_report_details(): void
     {
         $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create();
         $user->assignRole('admin');
 
-        $this->actingAs($user)->get(route('admin.reports.details', ['tahun' => 2026]))->assertForbidden();
+        $this->actingAs($user)->get(route('admin.reports.details', ['tahun' => 2026]))->assertOk();
     }
 }

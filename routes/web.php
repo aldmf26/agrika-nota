@@ -161,6 +161,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('restore');
     });
 
+    Route::prefix('admin')->as('admin.')->group(function () {
+        Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/details', [\App\Http\Controllers\Admin\ReportController::class, 'details'])->name('reports.details');
+        Route::get('/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('reports.export');
+    });
+
     /**
      * MANAGEMENT ROUTES - Super admin only
      */
@@ -186,15 +192,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/system/backups/{backup}/download', [\App\Http\Controllers\Admin\SystemController::class, 'download'])
                 ->name('system.backups.download');
             
-            // Reports routes
-            Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])
-                ->name('reports.index');
-            Route::get('/reports/details', [\App\Http\Controllers\Admin\ReportController::class, 'details'])
-                ->name('reports.details');
-            Route::get('/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])
-                ->name('reports.export');
             Route::post('/weekly-review-issues/{issue}/resolve', [\App\Http\Controllers\WeeklyReviewController::class, 'resolve'])
                 ->name('weekly-review-issues.resolve');
         });
     });
 });
+
+
+

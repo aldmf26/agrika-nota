@@ -8,7 +8,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">📝 Detail Nota</h1>
-                <p class="text-gray-600 mt-1">{{ $nota->tanggal_nota->format('d F Y') }}</p>
+                <p class="text-gray-600 mt-1">@indoDateTime($nota->tanggal_nota)</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <x-status-badge :status="$nota->status" />

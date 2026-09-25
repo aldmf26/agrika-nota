@@ -18,7 +18,7 @@
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Tanggal:</dt>
-                    <dd class="font-medium text-gray-900">{{ $nota->tanggal_nota->format('d/m/Y') }}</dd>
+                    <dd class="font-medium text-gray-900">@indoDateTime($nota->tanggal_nota)</dd>
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Divisi Utama:</dt>
@@ -125,7 +125,7 @@
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Tanggal:</dt>
-                        <dd class="font-medium">{{ $nota->approved_at->format('d/m/Y H:i') }}</dd>
+                        <dd class="font-medium">@indoDateTime($nota->approved_at)</dd>
                     </div>
                     @if ($nota->catatan_approver)
                         <div class="pt-2 border-t border-green-100 flex flex-col gap-1">

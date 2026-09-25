@@ -30,7 +30,7 @@
                                 class="px-3 py-2 text-sm font-medium {{ request()->routeIs('weekly-reviews.*') ? 'bg-green-50 text-green-700' : 'text-gray-600 hover:bg-gray-50' }}">Pemeriksaan
                                 Mingguan</a>
                         @endif
-                        @if (auth()->user()->hasRole('super_admin'))
+                        @if (auth()->user()->hasAnyRole(['super_admin', 'admin']))
                             <a href="{{ route('admin.reports.index') }}"
                                 class="px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.reports.*') ? 'bg-orange-50 font-bold text-orange-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                                 Laporan
@@ -108,7 +108,7 @@
                         <a href="{{ route('weekly-reviews.index') }}"
                             class="px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">Pemeriksaan Mingguan</a>
                     @endif
-                    @if (auth()->user()->hasRole('super_admin'))
+                    @if (auth()->user()->hasAnyRole(['super_admin', 'admin']))
                         <a href="{{ route('admin.reports.index') }}"
                             class="px-3 py-3 text-sm font-medium {{ request()->routeIs('admin.reports.*') ? 'bg-orange-50 text-orange-700' : 'text-gray-700 hover:bg-gray-50' }}">
                             Laporan

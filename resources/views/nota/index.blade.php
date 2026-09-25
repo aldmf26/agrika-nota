@@ -187,7 +187,7 @@
             @forelse($notas as $nota)
                 <a href="{{ route('nota.show', $nota) }}" class="block px-4 py-4 transition-colors active:bg-gray-50">
                     <div class="mb-2 flex items-start justify-between gap-3">
-                        <span class="text-xs font-medium text-gray-500">{{ $nota->tanggal_nota->format('d M Y') }}</span>
+                        <span class="text-xs font-medium text-gray-500">@indoDateTime($nota->tanggal_nota)</span>
                         <x-status-badge :status="$nota->status" class="shrink-0" />
                     </div>
                     <div class="flex items-baseline justify-between gap-3">
@@ -227,7 +227,7 @@
                     @forelse($notas as $nota)
                         <tr class="transition-colors duration-200" style="cursor: default;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                             <td class="px-6 py-5 text-sm text-gray-600 font-medium">
-                                {{ $nota->tanggal_nota->format('d M Y') }}
+                                @indoDateTime($nota->tanggal_nota)
                             </td>
                             <td class="px-6 py-5 text-sm text-gray-900 font-bold">
                                 {{ $nota->nomor_nota ?? '(digital)' }}

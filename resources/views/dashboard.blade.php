@@ -173,7 +173,7 @@
                                         </td>
                                         <td
                                             style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 0.95rem;">
-                                            {{ $nota->created_at->format('d M Y') }}
+                                            @indoDateTime($nota->created_at)
                                         </td>
                                         <td style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;">
                                             <span

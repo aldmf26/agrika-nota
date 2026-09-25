@@ -20,9 +20,15 @@ class NotaPolicy
      */
     public function view(User $user, Nota $nota): bool
     {
+        // Semua role dapat melihat nota approved dari laporan.
+        if ($nota->status === 'approved') {
+            return true;
+        }
+
         if ($user->hasRole('approver')) {
             return $nota->status === 'approved';
         }
+
         // Super admin atau approver bisa lihat semua
         if ($user->hasPermissionTo('nota.view-all')) {
             return true;

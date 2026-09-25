@@ -13,7 +13,7 @@
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <p class="truncate text-sm font-bold text-slate-900">{{ $nota->nomor_nota ?? '(digital)' }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $nota->tanggal_nota->format('d M Y') }} · {{ ucfirst(str_replace('_', ' ', $nota->tipe)) }}</p>
+                    <p class="mt-1 text-xs text-slate-500">@indoDateTime($nota->tanggal_nota) · {{ ucfirst(str_replace('_', ' ', $nota->tipe)) }}</p>
                 </div>
                 <p class="shrink-0 text-sm font-bold text-slate-900">Rp {{ number_format($nota->report_amount, 0, ',', '.') }}</p>
             </div>

@@ -242,7 +242,7 @@
                             @php
                                 Carbon\Carbon::setLocale('id');
                             @endphp
-                            <label>Tanggal</label><span>:</span><span>{{ $nota->tanggal_nota->translatedFormat('l, d/m/Y') }}</span>
+                            <label>Tanggal</label><span>:</span><span>@indoDateTime($nota->tanggal_nota)</span>
                         </div>
                         {{-- <div class="info-item">
                             <label>Divisi</label><span>:</span><span>{{ $nota->divisi->nama ?? '-' }}</span></div> --}}
@@ -254,7 +254,7 @@
                         <div class="info-item"><label>Diajukan
                                 Oleh</label><span>:</span><span>{{ $nota->user->name }}</span></div>
                         <div class="info-item"><label>Dicetak
-                                Pada</label><span>:</span><span>{{ now()->format('d/m/Y H:i') }}</span></div>
+                                Pada</label><span>:</span><span>{{ now()->translatedFormat('l, d/m/Y H:i:s') }}</span></div>
                     </div>
                 </div>
 

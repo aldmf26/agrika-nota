@@ -79,7 +79,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-5 text-center text-gray-500 text-sm font-medium">
-                                {{ $user->created_at->format('d/m/Y') }}
+                                @indoDateTime($user->created_at)
                             </td>
                             <td class="px-6 py-5 text-right space-x-1">
                                 <button onclick="openEditUserModal({{ json_encode($user->load('roles', 'divisis')) }})"
