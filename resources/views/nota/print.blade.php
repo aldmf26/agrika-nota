@@ -244,6 +244,9 @@
                             @endphp
                             <label>Tanggal</label><span>:</span><span>@indoDateTime($nota->tanggal_nota)</span>
                         </div>
+                        <div class="info-item">
+                            <label>Dibuat pada</label><span>:</span><span>@indoDateTime($nota->created_at)</span>
+                        </div>
                         {{-- <div class="info-item">
                             <label>Divisi</label><span>:</span><span>{{ $nota->divisi->nama ?? '-' }}</span></div> --}}
                     </div>

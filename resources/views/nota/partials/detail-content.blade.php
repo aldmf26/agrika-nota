@@ -21,6 +21,10 @@
                     <dd class="font-medium text-gray-900">@indoDateTime($nota->tanggal_nota)</dd>
                 </div>
                 <div class="flex justify-between">
+                    <dt class="text-gray-600">Dibuat pada:</dt>
+                    <dd class="font-medium text-gray-900">@indoDateTime($nota->created_at)</dd>
+                </div>
+                <div class="flex justify-between">
                     <dt class="text-gray-600">Divisi Utama:</dt>
                     <dd class="font-medium text-gray-900">{{ $nota->divisi->nama ?? '-' }}</dd>
                 </div>
