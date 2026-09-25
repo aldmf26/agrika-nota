@@ -69,13 +69,6 @@
                 </button>
             </form>
 
-            <div
-                style="margin-top: 1rem; padding: 1rem; background-color: #eff6ff; border: 1px solid #93c5fd; border-radius: 0.375rem; font-size: 0.875rem;">
-                <p style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.5rem;">Test Accounts:</p>
-                <p style="color: #1e40af;"><strong>Admin:</strong> admin@example.com / password</p>
-                <p style="color: #1e40af;"><strong>Approver:</strong> approver@example.com / password</p>
-                <p style="color: #1e40af;"><strong>Super Admin:</strong> superadmin@example.com / password</p>
-            </div>
         </div>
     </div>
 @endsection
