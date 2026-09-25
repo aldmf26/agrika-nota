@@ -18,7 +18,7 @@
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Tanggal:</dt>
-                    <dd class="font-medium text-gray-900">@indoDateTime($nota->tanggal_nota)</dd>
+                    <dd class="font-medium text-gray-900">@indoDate($nota->tanggal_nota)</dd>
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-gray-600">Dibuat pada:</dt>

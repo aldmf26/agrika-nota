@@ -242,7 +242,7 @@
                             @php
                                 Carbon\Carbon::setLocale('id');
                             @endphp
-                            <label>Tanggal</label><span>:</span><span>@indoDateTime($nota->tanggal_nota)</span>
+                            <label>Tanggal</label><span>:</span><span>@indoDate($nota->tanggal_nota)</span>
                         </div>
                         <div class="info-item">
                             <label>Dibuat pada</label><span>:</span><span>@indoDateTime($nota->created_at)</span>

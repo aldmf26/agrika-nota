@@ -31,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Blade::directive('indoDateTime', function ($expression) {
             return "<?php echo {$expression} ? \\Carbon\\Carbon::parse({$expression})->locale('id')->translatedFormat('l, d F Y, H.i') : '-'; ?>";
         });
+        \Illuminate\Support\Facades\Blade::directive('indoDate', function ($expression) {
+            return "<?php echo {$expression} ? \\Carbon\\Carbon::parse({$expression})->locale('id')->translatedFormat('l, d F Y') : '-'; ?>";
+        });
 
         Gate::policy(Nota::class, NotaPolicy::class);
 
