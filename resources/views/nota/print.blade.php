@@ -230,7 +230,7 @@
                     {{ $copy === 1 ? 'AGRIKA NOTA SISTEM' : 'COPY' }}
                 </div>
                 <div class="header">
-                    <h1>AGRIKA NOTA</h1>
+                    <h1>{{ $nota->divisi->nama ?? '-' }} NOTA MANUAL</h1>
                     <p>Sistem Pencatatan Nota & Transaksi Internal</p>
                 </div>
 
@@ -241,8 +241,8 @@
                         <div class="info-item">
                             <label>Tanggal</label><span>:</span><span>{{ $nota->tanggal_nota->format('d/m/Y') }}</span>
                         </div>
-                        <div class="info-item">
-                            <label>Divisi</label><span>:</span><span>{{ $nota->divisi->nama ?? '-' }}</span></div>
+                        {{-- <div class="info-item">
+                            <label>Divisi</label><span>:</span><span>{{ $nota->divisi->nama ?? '-' }}</span></div> --}}
                     </div>
                     <div class="info-right">
                         <div class="info-item"><label>Tipe
